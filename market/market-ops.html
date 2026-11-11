@@ -60,11 +60,44 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
 .cur{display:inline-block;width:.55em;height:1em;background:var(--trace);vertical-align:-.15em;animation:bl 1s steps(1) infinite}
 @keyframes bl{50%{opacity:0}}
 .foot{font:11px/1.7 var(--mono);color:var(--dim);letter-spacing:.04em}
+/* 폰 가독성 + 밤의 관제실 스코프 */
+html{scroll-behavior:smooth}
+body{font-size:16px}
+h2{scroll-margin-top:64px}
+.wf{border:1px solid var(--line);background:var(--panel);position:relative}
+.wf canvas{display:block;width:100%;height:150px}
+.wf .lbl{position:absolute;font:11px var(--mono);color:var(--dim);letter-spacing:.06em}
+.lbl.tl{top:6px;left:8px}.lbl.tr{top:6px;right:8px;color:var(--warn)}.lbl.bl{bottom:6px;left:8px}.lbl.br{bottom:6px;right:8px}
+.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.jump a{background:var(--bg);color:var(--trace);text-align:center;padding:11px 0;font:600 13px var(--mono);letter-spacing:.1em;text-decoration:none}
+.jump a:active{background:var(--panel)}
+.jump a:focus-visible{outline:2px solid var(--trace);outline-offset:-2px}
+.t{padding:14px}
+.t .k{font-size:12px}
+.t .p{font-size:22px}
+.t .c{font-size:14px}
+.t .s{font-size:11.5px}
+.t .s a{display:inline-block;padding:4px 0}
+.news a{padding:16px 14px;gap:6px}
+.news h3{font-size:16.5px}
+.news p{font-size:14.5px;line-height:1.6}
+.news .m{font-size:12px}
+.row{font-size:13px}
+ul.roe{font-size:14.5px}
 @media (prefers-reduced-motion:reduce){.cur{animation:none}}
 </style>
 
 <div class="wrap">
   <div class="bar"><span>MARKET OPS // <b>시장 관제</b></span><span id="clk">KST --:--:--</span></div>
+
+  <div class="wf">
+    <canvas id="wf" aria-label="자산별 등락 크기를 봉우리로 그린 스펙트럼 화면"></canvas>
+    <span class="lbl tl">SPAN 8 CH · 일간 등락</span>
+    <span class="lbl tr" id="sig">▲ PEAK NASDAQ +2.74%</span>
+    <span class="lbl bl">KOSPI</span><span class="lbl br">BTC</span>
+  </div>
+
+  <nav class="jump" aria-label="섹션 이동"><a href="#gauge">계기판</a><a href="#feed">뉴스</a><a href="#rules">수칙</a></nav>
 
   <div class="log" id="log" aria-live="polite"></div>
 
@@ -76,13 +109,13 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
     <div class="ax"><span>−3</span><span>0</span><span>+3</span></div>
   </div>
 
-  <h2>// 계기판</h2>
+  <h2 id="gauge">// 계기판</h2>
   <div class="grid" id="tiles"></div>
 
-  <h2>// 수신 뉴스</h2>
+  <h2 id="feed">// 수신 뉴스</h2>
   <ul class="news" id="news"></ul>
 
-  <h2>// 교전 수칙</h2>
+  <h2 id="rules">// 교전 수칙</h2>
   <ul class="roe">
     <li><span>R-01</span><div>숫자는 웹 검색으로 모은 스냅샷이다. 실시간이 아니다.</div></li>
     <li><span>R-02</span><div>자산마다 기준일이 다르다. <span class="tag est">추정</span> 표시는 날짜가 확정되지 않은 값.</div></li>
@@ -150,6 +183,27 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
     li.innerHTML='<a href="'+esc(n.u)+'" target="_blank" rel="noopener"><span class="m"><span>'+esc(n.d)+'</span><span class="src">'+esc(n.s)+' ↗</span></span><h3>'+esc(n.t)+'</h3><p>'+esc(n.x)+'</p></a>';
     news.appendChild(li);
   });
+
+  // 스코프: 등락률이 있는 8개 채널을 봉우리로. 높이 = |등락률|/3, 색 = 상승/하락
+  const ch=D.filter(r=>r.c!=null&&r.c!==0);
+  const cv=document.getElementById('wf'),x=cv.getContext('2d');let W,H,rows=[],f=0;
+  function size(){const r=devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*r;cv.height=H*r;x.setTransform(r,0,0,r,0,0);}
+  size();addEventListener('resize',size);
+  const pos=ch.map((_,i)=>(i+.5)/ch.length);
+  function frame(){
+    const n=Math.max(60,Math.floor(W/3)),row=[];
+    for(let i=0;i<n;i++){const u=i/n;let v=Math.random()*.12,col=0;
+      ch.forEach((r,k)=>{const a=Math.min(Math.abs(r.c),3)/3*(.85+.15*Math.sin(f/18+k));const g=a*Math.exp(-((u-pos[k])**2)/(2*.018*.018));if(g>v){col=r.c>0?1:-1;}v+=g;});
+      row.push([Math.min(1,v),col]);}
+    rows.unshift(row);const top=H*.5;if(rows.length>Math.ceil((H-top)/2))rows.pop();
+    x.fillStyle='#0a1117';x.fillRect(0,0,W,H);
+    x.strokeStyle='#15303a';x.lineWidth=1;for(let g=1;g<4;g++){x.beginPath();x.moveTo(0,top*g/4);x.lineTo(W,top*g/4);x.stroke();}
+    x.beginPath();row.forEach((p,i)=>{const px=i/(n-1)*W,py=top-6-p[0]*(top-24);i?x.lineTo(px,py):x.moveTo(px,py);});
+    x.strokeStyle='#46f0c8';x.lineWidth=1.4;x.shadowColor='#46f0c8';x.shadowBlur=8;x.stroke();x.shadowBlur=0;
+    rows.forEach((r,j)=>{const y=top+j*2;r.forEach((p,i)=>{if(p[0]<.2)return;x.fillStyle=p[1]>0?'rgba(255,93,108,'+p[0]+')':p[1]<0?'rgba(90,169,255,'+p[0]+')':'rgba(70,240,200,'+(p[0]*.6)+')';x.fillRect(i/n*W,y,W/n+1,2);});});
+    f++;if(!reduce)requestAnimationFrame(frame);
+  }
+  frame();
 
   const L=[['> 관제실 접속 중...',''],['> 시세 신호 수신 ............ ','8/10','ok'],['> 미확보 채널 ............... ','3','w'],['> 뉴스 피드 복호화 ........... ','7건','ok']];
   const log=document.getElementById('log');
