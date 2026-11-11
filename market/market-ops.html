@@ -2,199 +2,286 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
 <style>
-/* 레이아웃: 폰 전용 단일 칼럼 관제 화면 — 등락 스펙트럼 → 지수 계기판 → 뉴스 로그 */
+/* 레이아웃: 폰 전용 단일 칼럼 관제 화면 — 스코프 → 브리핑 → 차트 → 계기 → 수급 → 종목 → 일정 → 사건 로그 → 뉴스 */
 :root{
   --bg:#05080b; --panel:#0a1117; --line:#15303a;
-  --trace:#46f0c8; --dim:#5f8a8f; --fg:#c9e6e2; --hi:#e9fffa;
+  --trace:#46f0c8; --dim:#5f8a8f; --fg:#c9e6e2; --hi:#e9fffa; --sub:#9fbfbb;
   --up:#ff5d6c; --down:#5aa9ff; --warn:#ffb547;
   --mono:"IBM Plex Mono","Nanum Gothic Coding",ui-monospace,monospace;
   --ko:"Nanum Gothic Coding","IBM Plex Mono",monospace;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font:15px/1.65 var(--ko);
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 48px}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:16px/1.65 var(--ko);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 56px}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:20;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
-.wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+a{color:inherit}
+a:focus-visible{outline:2px solid var(--trace);outline-offset:2px}
 .bar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:12px var(--mono);color:var(--dim);letter-spacing:.08em}
 .bar b{color:var(--trace);font-weight:600}
+.panel{border:1px solid var(--line);background:var(--panel);position:relative}
+.wf canvas{display:block;width:100%;height:140px}
+.lbl{position:absolute;font:11px var(--mono);color:var(--dim);letter-spacing:.06em}
+.lbl.tl{top:6px;left:8px}.lbl.tr{top:6px;right:8px;color:var(--warn)}.lbl.bl{bottom:6px;left:8px}.lbl.br{bottom:6px;right:8px}
+.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;overflow-x:auto;scrollbar-width:none;border:1px solid var(--line);background:var(--bg)}
+.jump::-webkit-scrollbar{display:none}
+.jump a{flex:0 0 auto;color:var(--trace);padding:11px 14px;font:600 13px var(--mono);letter-spacing:.08em;text-decoration:none;border-right:1px solid var(--line)}
+.jump a:last-child{border-right:0}
+.jump a.on{background:var(--trace);color:var(--bg)}
 .log{font:12.5px/1.8 var(--mono);color:var(--dim)}
-.log .ok{color:var(--trace)}.log .w{color:var(--warn)}
-h1{font:700 clamp(24px,7vw,32px)/1.25 var(--ko);margin:0;color:var(--hi);text-wrap:balance}
+.ok{color:var(--trace)}.w{color:var(--warn)}
+h1{font:700 clamp(25px,7.4vw,33px)/1.25 var(--ko);margin:0;color:var(--hi);text-wrap:balance}
 h1 small{display:block;font:600 11px var(--mono);color:var(--trace);letter-spacing:.2em;margin-bottom:8px}
-h2{font:600 11px var(--mono);letter-spacing:.2em;color:var(--dim);margin:6px 0 0;border-top:1px dashed var(--line);padding-top:16px}
-.scope{border:1px solid var(--line);background:var(--panel);padding:12px 12px 8px;display:flex;flex-direction:column;gap:6px}
-.scope .hd{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim);letter-spacing:.06em}
-.row{display:grid;grid-template-columns:4.6em 1fr 4.2em;align-items:center;gap:8px;font:12px var(--mono);font-variant-numeric:tabular-nums}
-.row .n{color:var(--fg)}
-.row .track{position:relative;height:12px}
-.row .track::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
-.row .b{position:absolute;top:2px;height:8px}
-.row .b.u{left:50%;background:var(--up);box-shadow:0 0 8px var(--up)}
-.row .b.d{right:50%;background:var(--down);box-shadow:0 0 8px var(--down)}
-.row .v{text-align:right}
+h1 em{font-style:normal;color:var(--up);text-shadow:0 0 18px rgba(255,93,108,.45)}
+.lede{margin:0;color:var(--sub);font-size:14.5px}
+h2{font:600 11px var(--mono);letter-spacing:.2em;color:var(--dim);margin:8px 0 0;border-top:1px dashed var(--line);padding-top:16px;scroll-margin-top:60px;display:flex;justify-content:space-between;gap:8px}
+h2 span{color:var(--trace)}
+.note{font:11.5px/1.6 var(--mono);color:var(--dim);margin:0}
+.note a{color:var(--dim)}
 .u-t{color:var(--up)}.d-t{color:var(--down)}.na{color:var(--dim)}
-.scope .ax{display:flex;justify-content:space-between;font:10px var(--mono);color:var(--dim);padding-left:calc(4.6em + 8px);padding-right:calc(4.2em + 8px)}
+.tag{display:inline-block;font:600 10px/1.5 var(--mono);padding:0 5px;border:1px solid currentColor;letter-spacing:.06em;vertical-align:1px;color:var(--warn)}
+/* 차트 */
+.chart{padding:12px 10px 8px}
+.chart .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 4px}
+.chart .big{font:600 26px var(--mono);color:var(--hi);font-variant-numeric:tabular-nums}
+.chart .chg{font:600 14px var(--mono)}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font:10px var(--mono);fill:var(--dim)}
+.chart .ev{fill:var(--warn);font-weight:600}
+#kline{stroke-dasharray:1000;stroke-dashoffset:0}
+/* 게이지 */
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.g{background:var(--panel);padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.g svg{width:100%;max-width:170px;height:auto;display:block}
+.g .gv{font:600 24px var(--mono);color:var(--hi);margin-top:-6px;font-variant-numeric:tabular-nums}
+.g .gk{font:600 11px var(--mono);color:var(--dim);letter-spacing:.1em}
+.g .gs{font:12px var(--ko);text-align:center}
+.g .gn{font:10.5px/1.5 var(--mono);color:var(--dim);text-align:center}
+.needle{transform-origin:80px 80px;transition:transform 1.4s cubic-bezier(.2,1.4,.4,1)}
+/* 스펙트럼 */
+.spec{padding:12px;display:flex;flex-direction:column;gap:7px}
+.spec .hd{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--dim);letter-spacing:.06em}
+.row{display:grid;grid-template-columns:5.4em 1fr 4.4em;align-items:center;gap:8px;font:13px var(--mono);font-variant-numeric:tabular-nums}
+.row .n{line-height:1.2}.row .n small{display:block;font-size:9.5px;color:var(--dim)}
+.track{position:relative;height:12px}
+.track::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.b{position:absolute;top:2px;height:8px;width:0;transition:width .8s ease}
+.b.u{left:50%;background:var(--up);box-shadow:0 0 8px var(--up)}
+.b.d{right:50%;background:var(--down);box-shadow:0 0 8px var(--down)}
+.row .v{text-align:right}
+.ax{display:flex;justify-content:space-between;font:10px var(--mono);color:var(--dim);padding-left:calc(5.4em + 8px);padding-right:calc(4.4em + 8px)}
+/* 타일 */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
-.t{background:var(--panel);padding:12px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.t .k{font:600 11px var(--mono);color:var(--dim);letter-spacing:.08em}
-.t .p{font:600 19px var(--mono);color:var(--hi);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.t .c{font:600 13px var(--mono);font-variant-numeric:tabular-nums}
-.t .s{font:10.5px/1.5 var(--mono);color:var(--dim);margin-top:4px}
-.t .s a{color:var(--dim)}
+.t{background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.t .k{font:600 12px var(--mono);color:var(--dim);letter-spacing:.08em}
+.t .p{font:600 21px var(--mono);color:var(--hi);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.t .c{font:600 14px var(--mono);font-variant-numeric:tabular-nums}
+.t .s{font:11px/1.5 var(--mono);color:var(--dim);margin-top:4px}
+.t .s a{color:var(--dim);display:inline-block;padding:3px 0}
 .t.miss .p{color:var(--dim);font-size:15px}
-.tag{display:inline-block;font:600 10px var(--mono);padding:0 5px;border:1px solid currentColor;letter-spacing:.06em}
-.tag.est{color:var(--warn)}
+/* 수급 */
+.flow{padding:12px;display:flex;flex-direction:column;gap:12px}
+.fday{display:flex;flex-direction:column;gap:6px}
+.fday .dt{font:600 12px var(--mono);color:var(--trace);letter-spacing:.08em}
+.frow{display:grid;grid-template-columns:3em 1fr 5.6em;gap:8px;align-items:center;font:13px var(--mono);font-variant-numeric:tabular-nums}
+.frow .v{text-align:right}
+.alarm{border:1px solid var(--down);padding:12px;display:flex;gap:12px;align-items:center;box-shadow:0 0 22px rgba(90,169,255,.12) inset}
+.alarm .x{font:700 26px var(--mono);color:var(--down);white-space:nowrap;text-shadow:0 0 14px rgba(90,169,255,.5)}
+.alarm p{margin:0;font-size:13.5px;color:var(--sub)}
+/* 히트맵 */
+.heat{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}
+.h{padding:12px;display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);min-width:0}
+.h .hn{font:700 15px var(--ko);color:var(--hi)}
+.h .hp{font:12px var(--mono);color:var(--sub);font-variant-numeric:tabular-nums}
+.h .hc{font:600 20px var(--mono);font-variant-numeric:tabular-nums}
+.h .hs{font:10.5px var(--mono);color:var(--dim)}
+/* 일정 */
+.cal{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line)}
+.cal li{background:var(--panel);display:grid;grid-template-columns:4.6em 1fr;gap:12px;padding:12px;align-items:center}
+.dd{font:700 20px var(--mono);color:var(--warn);text-align:center;border:1px solid var(--line);padding:6px 0;font-variant-numeric:tabular-nums}
+.dd.past{color:var(--dim)}
+.cal .ce{font:700 15px var(--ko);color:var(--hi)}
+.cal .cd{font:11.5px/1.5 var(--mono);color:var(--dim)}
+/* 사건 로그 */
+.chain{list-style:none;margin:0;padding:0 0 0 18px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:14px}
+.chain li{position:relative}
+.chain li::before{content:"";position:absolute;left:-23px;top:7px;width:9px;height:9px;background:var(--bg);border:2px solid var(--trace)}
+.chain li.dn::before{border-color:var(--down);background:var(--down);box-shadow:0 0 10px var(--down)}
+.chain li.upx::before{border-color:var(--up);background:var(--up);box-shadow:0 0 10px var(--up)}
+.chain .cdt{font:600 12px var(--mono);color:var(--trace);letter-spacing:.06em}
+.chain p{margin:2px 0 0;font-size:14.5px}
+.chain .src{font:11px var(--mono);color:var(--dim)}
+/* 뉴스 */
 .news{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line)}
 .news li{background:var(--panel)}
-.news a{display:flex;flex-direction:column;gap:4px;padding:12px;color:inherit;text-decoration:none}
-.news a:focus-visible,.t a:focus-visible{outline:2px solid var(--trace);outline-offset:2px}
-.news .m{font:11px var(--mono);color:var(--dim);display:flex;gap:8px;flex-wrap:wrap}
+.news a{display:flex;flex-direction:column;gap:6px;padding:16px 14px;text-decoration:none}
+.news .m{font:12px var(--mono);color:var(--dim);display:flex;gap:8px;flex-wrap:wrap}
 .news .m .src{color:var(--trace)}
-.news h3{margin:0;font:700 15px/1.4 var(--ko);color:var(--hi)}
-.news p{margin:0;font-size:13.5px;color:#9fbfbb}
-ul.roe{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.news h3{margin:0;font:700 16.5px/1.4 var(--ko);color:var(--hi)}
+.news p{margin:0;font-size:14.5px;line-height:1.6;color:var(--sub)}
+ul.roe{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14.5px}
 ul.roe li{display:grid;grid-template-columns:3em 1fr;gap:8px}
 ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
 .cur{display:inline-block;width:.55em;height:1em;background:var(--trace);vertical-align:-.15em;animation:bl 1s steps(1) infinite}
 @keyframes bl{50%{opacity:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.blink{animation:pulse 1.6s ease-in-out infinite}
 .foot{font:11px/1.7 var(--mono);color:var(--dim);letter-spacing:.04em}
-/* 폰 가독성 + 밤의 관제실 스코프 */
-html{scroll-behavior:smooth}
-body{font-size:16px}
-h2{scroll-margin-top:64px}
-.wf{border:1px solid var(--line);background:var(--panel);position:relative}
-.wf canvas{display:block;width:100%;height:150px}
-.wf .lbl{position:absolute;font:11px var(--mono);color:var(--dim);letter-spacing:.06em}
-.lbl.tl{top:6px;left:8px}.lbl.tr{top:6px;right:8px;color:var(--warn)}.lbl.bl{bottom:6px;left:8px}.lbl.br{bottom:6px;right:8px}
-.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-.jump a{background:var(--bg);color:var(--trace);text-align:center;padding:11px 0;font:600 13px var(--mono);letter-spacing:.1em;text-decoration:none}
-.jump a:active{background:var(--panel)}
-.jump a:focus-visible{outline:2px solid var(--trace);outline-offset:-2px}
-.t{padding:14px}
-.t .k{font-size:12px}
-.t .p{font-size:22px}
-.t .c{font-size:14px}
-.t .s{font-size:11.5px}
-.t .s a{display:inline-block;padding:4px 0}
-.news a{padding:16px 14px;gap:6px}
-.news h3{font-size:16.5px}
-.news p{font-size:14.5px;line-height:1.6}
-.news .m{font-size:12px}
-.row{font-size:13px}
-ul.roe{font-size:14.5px}
-@media (prefers-reduced-motion:reduce){.cur{animation:none}}
+@media (prefers-reduced-motion:reduce){.cur,.blink{animation:none}.needle,.b{transition:none}}
 </style>
 
 <div class="wrap">
   <div class="bar"><span>MARKET OPS // <b>시장 관제</b></span><span id="clk">KST --:--:--</span></div>
 
-  <div class="wf">
+  <div class="panel wf">
     <canvas id="wf" aria-label="자산별 등락 크기를 봉우리로 그린 스펙트럼 화면"></canvas>
-    <span class="lbl tl">SPAN 8 CH · 일간 등락</span>
-    <span class="lbl tr" id="sig">▲ PEAK NASDAQ +2.74%</span>
+    <span class="lbl tl">SPAN 11 CH · 최근 등락</span>
+    <span class="lbl tr blink" id="sig">▲ PEAK KOSDAQ +4.48%</span>
     <span class="lbl bl">KOSPI</span><span class="lbl br">BTC</span>
   </div>
 
-  <nav class="jump" aria-label="섹션 이동"><a href="#gauge">계기판</a><a href="#feed">뉴스</a><a href="#rules">수칙</a></nav>
+  <nav class="jump" id="jump" aria-label="섹션 이동">
+    <a href="#chart">차트</a><a href="#fear">공포</a><a href="#gauge">계기판</a><a href="#flow">수급</a><a href="#stocks">종목</a><a href="#cal">일정</a><a href="#chain">사건</a><a href="#feed">뉴스</a>
+  </nav>
 
   <div class="log" id="log" aria-live="polite"></div>
 
-  <h1><small>SNAPSHOT · 2026-11-11 수집</small>코스피는 5천선에서 숨 고르고, 뉴욕은 2%대 반등</h1>
+  <h1><small>BRIEFING · 2026-11-11 수집</small>서킷브레이커 나흘 뒤, 코스피 <em>+4.39%</em> 반등</h1>
+  <p class="lede">11/6 서킷브레이커로 5,059까지 밀렸던 코스피가 11/10 매수 사이드카와 함께 5,239로 올라섰다. 뉴욕은 11/9 AI 과매도 반발과 유가 급락으로 2%대 반등.</p>
 
-  <div class="scope" aria-label="자산별 일간 등락률 막대">
-    <div class="hd"><span>일간 등락 스펙트럼</span><span>±3%</span></div>
+  <h2 id="chart">// KOSPI 궤적 <span>10/30 → 11/10</span></h2>
+  <div class="panel chart">
+    <div class="hd"><span class="big">5,239.13</span><span class="chg u-t">+220.28 (+4.39%)</span></div>
+    <svg id="ksvg" viewBox="0 0 340 190" role="img" aria-label="코스피 종가 꺾은선. 10/30 5730.74, 11/2 5859.08, 11/6 5059.69, 11/9 5018.85, 11/10 5239.13. 11/3~11/5는 미확보로 점선."></svg>
+    <p class="note">점선 = 11/3~11/5 종가 미확보 구간. 11/6 등락률은 보도마다 −6.02% / −5.28%로 다름(종가 5,059.69는 11/9 역산과 일치). 출처: <a href="https://biz.sbs.co.kr/amp/article/20000343359" target="_blank" rel="noopener">SBS Biz</a> · <a href="https://core.asiae.co.kr/article/2026110215450118253" target="_blank" rel="noopener">아시아경제</a> · <a href="https://biz.sbs.co.kr/amp/article/20000344699" target="_blank" rel="noopener">SBS Biz</a> · <a href="https://www.fnnews.com/news/202611091612373711" target="_blank" rel="noopener">파이낸셜뉴스</a> · <a href="https://view.asiae.co.kr/article/2026111015344411634" target="_blank" rel="noopener">아시아경제</a></p>
+  </div>
+
+  <h2 id="fear">// 공포 계기 <span>11/06 기준</span></h2>
+  <div class="gauges">
+    <div class="g"><svg id="g1" viewBox="0 0 160 92" aria-hidden="true"></svg><span class="gv">25.64</span><span class="gk">VIX</span><span class="gs w">경계 구간</span><span class="gn">11/05 28.18 (하루 +69.7%)<br><a href="https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/" target="_blank" rel="noopener">247wallst</a></span></div>
+    <div class="g"><svg id="g2" viewBox="0 0 160 92" aria-hidden="true"></svg><span class="gv">20</span><span class="gk">FEAR &amp; GREED</span><span class="gs d-t">극단적 공포</span><span class="gn">1주 전 26 · 1달 전 47<br><a href="https://www.placera.se/telegram/fear-greed-index-indikerar-extrem-radsla-i-marknaden-efter-wall-street-raset-20261106" target="_blank" rel="noopener">placera</a></span></div>
+  </div>
+  <p class="note">11/9 이후 VIX·공포탐욕 종가는 미확보. 11/9 장중 VIX 21.14(−17.6%) 보도만 있음. 게이지 구간 표시는 담당 세션이 정한 눈금(VIX 15/25/35, 공포탐욕 25/45/55/75).</p>
+
+  <div class="panel spec" aria-label="자산별 최근 등락률 막대">
+    <div class="hd"><span>최근 등락 스펙트럼</span><span>±5%</span></div>
     <div id="spec" style="display:flex;flex-direction:column;gap:7px"></div>
-    <div class="ax"><span>−3</span><span>0</span><span>+3</span></div>
+    <div class="ax"><span>−5</span><span>0</span><span>+5</span></div>
   </div>
 
   <h2 id="gauge">// 계기판</h2>
   <div class="grid" id="tiles"></div>
 
+  <h2 id="flow">// 투자자 수급 <span>KOSPI · 억원</span></h2>
+  <div class="alarm"><span class="x">−4.96조</span><p>11/6 서킷브레이커 날 외국인 순매도. 단일 매체 보도라 미검증. <a href="https://biz.sbs.co.kr/amp/article/20000344699" target="_blank" rel="noopener" class="na">SBS Biz</a></p></div>
+  <div class="panel flow" id="flowbox"></div>
+  <p class="note">11/09 수치는 매체마다 수백억 차이(뉴시스 −6,900 / 아시아경제 −6,470 등). 여기선 블록미디어 값. 11/02 날짜는 기사 주소 기준 추정. 11/10은 외국인·기관 동반 매수라는 보도만 있고 금액 미확보.</p>
+
+  <h2 id="stocks">// 종목 열지도 <span>11/09</span></h2>
+  <div class="heat" id="heat"></div>
+  <p class="note">LG에너지솔루션, 애플, MS, 알파벳, 아마존, 메타는 미확보.</p>
+
+  <h2 id="cal">// 다가오는 일정</h2>
+  <ul class="cal" id="calbox"></ul>
+
+  <h2 id="chain">// 사건 로그</h2>
+  <ol class="chain">
+    <li><span class="cdt">11/03 · 미국 중간선거</span><p>민주당 상하원 다수 확보. AI 데이터센터·전력 규제 강화 우려가 반도체로 번짐.</p><span class="src"><a href="https://newstomato.com/ReadNews.aspx?no=1319571" target="_blank" rel="noopener">뉴스토마토 외 검색 요약</a></span></li>
+    <li class="dn"><span class="cdt">11/05 · 뉴욕 급락</span><p>S&amp;P −4.4%. VIX 하루 +69.7%로 1990년 이후 세 번째 큰 상승.</p><span class="src"><a href="https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/" target="_blank" rel="noopener">247wallst</a></span></li>
+    <li class="dn"><span class="cdt">11/06 · 코스피 서킷브레이커</span><p>개장 직후 8%대 급락, 09:03 1단계 서킷브레이커(올해 11번째). 코스닥 매도 사이드카. 종가 5,059.69.</p><span class="src"><a href="https://biz.sbs.co.kr/amp/article/20000344699" target="_blank" rel="noopener">SBS Biz</a></span></li>
+    <li class="upx"><span class="cdt">11/09 · 뉴욕 반등</span><p>AI 과매도 인식과 브렌트유 −5.8%. S&amp;P +2.35%. 엔비디아는 이사회의 CEO 조사 착수 보도로 역행.</p><span class="src"><a href="https://gvwire.com/2026/11/09/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/" target="_blank" rel="noopener">GV Wire(AP)</a></span></li>
+    <li class="upx"><span class="cdt">11/10 · 코스피 매수 사이드카</span><p>+4.39% 5,239.13. 유가 하락, 반도체 심리 회복, 외국인·기관 동반 매수.</p><span class="src"><a href="https://view.asiae.co.kr/article/2026111015344411634" target="_blank" rel="noopener">아시아경제</a></span></li>
+  </ol>
+
   <h2 id="feed">// 수신 뉴스</h2>
   <ul class="news" id="news"></ul>
 
-  <h2 id="rules">// 교전 수칙</h2>
+  <h2>// 교전 수칙</h2>
   <ul class="roe">
-    <li><span>R-01</span><div>숫자는 웹 검색으로 모은 스냅샷이다. 실시간이 아니다.</div></li>
-    <li><span>R-02</span><div>자산마다 기준일이 다르다. <span class="tag est">추정</span> 표시는 날짜가 확정되지 않은 값.</div></li>
-    <li><span>R-03</span><div>매매 전에는 탭해서 원문을 직접 확인한다.</div></li>
+    <li><span>R-01</span><div>숫자는 웹 검색 요약에서 옮긴 스냅샷이다. 실시간이 아니고 원문은 열람하지 못했다.</div></li>
+    <li><span>R-02</span><div>자산마다 기준일이 다르다. <span class="tag">추정</span>은 날짜나 값이 확정되지 않은 것.</div></li>
+    <li><span>R-03</span><div>매매 전에는 출처를 눌러 원문을 직접 확인한다.</div></li>
   </ul>
 
-  <div class="foot">빨강 = 상승 · 파랑 = 하락 (국내 관례)<br>미확보: 코스닥 지수값 · 원/달러 · 닛케이<br>NEXT TRANSMISSION · 갱신은 요청 시 <span class="cur"></span></div>
+  <div class="foot">빨강 = 상승 · 파랑 = 하락 (국내 관례)<br>미확보: 11/11 국내 종가 · 11/10 미국 종가 · 10월 CPI 결과<br>NEXT TRANSMISSION · 갱신은 요청 시 <span class="cur"></span></div>
 </div>
 
 <script>
 (function(){
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS='http://www.w3.org/2000/svg';
+  const esc=s=>String(s).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  const fmt=c=>c==null?'—':(c>0?'+':'')+c.toFixed(2)+'%';
+  const cls=c=>c==null?'na':c>0?'u-t':c<0?'d-t':'na';
+  const lnk=(u,s)=>u?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(s)+'</a>':'';
+  const kstNow=()=>new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
+
   const clk=document.getElementById('clk');
   const tick=()=>clk.textContent='KST '+new Date().toLocaleTimeString('ko-KR',{hour12:false,timeZone:'Asia/Seoul'});
   tick();setInterval(tick,1000);
 
-  // 출처: 서브에이전트 웹검색 스냅샷 (2026-11-11). 값은 검색 결과 그대로, 없으면 null.
+  // ── 데이터: 서브에이전트 웹검색 스냅샷 2건(2026-11-11). 검색 요약 그대로, 없으면 null.
+  const IL='https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/';
+  const ST='https://www.thestar.com.my/news/world/2026/11/10/us-stocks-close-higher';
+  const FN='https://www.fnnews.com/news/202611091612373711';
   const D=[
-    {k:'KOSPI',p:'5,018.85',c:-0.81,d:'11/09 종가',src:'블록미디어',u:'https://www.blockmedia.co.kr/archives/1163141'},
-    {k:'KOSDAQ',p:null,c:-0.8,d:'11/09 종가 · 등락만 확인',src:'아시아경제',u:'https://core.asiae.co.kr/article/2026110916013525615'},
-    {k:'S&P 500',p:'7,549.94',c:2.35,d:'11/09 세션',est:1,src:'The Star',u:'https://www.thestar.com.my/news/world/2026/11/10/us-stocks-close-higher'},
-    {k:'NASDAQ',p:'25,253.14',c:2.74,d:'11/09 세션',est:1,src:'The Star',u:'https://www.thestar.com.my/news/world/2026/11/10/us-stocks-close-higher'},
-    {k:'DOW',p:'52,389.75',c:2.15,d:'11/09 세션',est:1,src:'The Star',u:'https://www.thestar.com.my/news/world/2026/11/10/us-stocks-close-higher'},
-    {k:'US 10Y',p:'4.859%',c:0,cs:'보합',d:'날짜 미상',est:1,src:'investingLive',u:'https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/'},
-    {k:'WTI',p:'$88.57',c:-2.57,d:'날짜 미상',est:1,src:'investingLive',u:'https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/'},
-    {k:'GOLD',p:'$4,109',c:1.07,d:'날짜 미상',est:1,src:'investingLive',u:'https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/'},
-    {k:'BTC',p:'$74,450',c:0.53,d:'날짜 미상',est:1,src:'investingLive',u:'https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/'},
-    {k:'USD/KRW',p:null,c:null,d:'미확보'}
+    {k:'KOSPI',p:'5,239.13',c:4.39,d:'11/10 종가',src:'아시아경제',u:'https://view.asiae.co.kr/article/2026111015344411634'},
+    {k:'KOSDAQ',p:'667.61',c:4.48,d:'11/10 종가',src:'파이낸셜뉴스',u:FN},
+    {k:'NIKKEI',p:'58,775',c:2.33,d:'11/09',src:'tradingeconomics',u:'https://tradingeconomics.com/japan/stock-market/news/598952'},
+    {k:'S&P 500',p:'7,549.94',c:2.35,d:'11/09',src:'The Star',u:ST},
+    {k:'NASDAQ',p:'25,253.14',c:2.74,d:'11/09',src:'The Star',u:ST},
+    {k:'DOW',p:'52,389.75',c:2.15,d:'11/09',src:'The Star',u:ST},
+    {k:'USD/KRW',p:'1,347.1',cs:'−9.5원',cc:-1,d:'11/09 정규장',src:'파이낸셜뉴스',u:FN},
+    {k:'US 10Y',p:'4.859%',c:0,cs:'보합',d:'날짜 미상',est:1,src:'investingLive',u:IL},
+    {k:'WTI',p:'$88.57',c:-2.57,d:'날짜 미상',est:1,src:'investingLive',u:IL},
+    {k:'GOLD',p:'$4,109',c:1.07,d:'날짜 미상',est:1,src:'investingLive',u:IL},
+    {k:'BTC',p:'$74,450',c:0.53,d:'날짜 미상',est:1,src:'investingLive',u:IL}
+  ];
+  const KS=[ // 거래일 슬롯: 10/30, 11/2, 11/3, 11/4, 11/5, 11/6, 11/9, 11/10
+    ['10/30',5730.74],['11/02',5859.08],['11/03',null],['11/04',null],['11/05',null],['11/06',5059.69],['11/09',5018.85],['11/10',5239.13]];
+  const FL=[
+    {d:'11/09',f:-6930,i:7204,r:-4887},
+    {d:'11/02',f:-3731,i:12329,r:-13475,est:1}
+  ];
+  const ST_=[
+    {n:'삼성전자',p:'189,900원',c:0.64,s:'블록미디어',u:'https://www.blockmedia.co.kr/archives/1163075'},
+    {n:'SK하이닉스',p:'1,136,000원',c:0.35,s:'블록미디어',u:'https://www.blockmedia.co.kr/archives/1163075'},
+    {n:'현대차',p:'271,500원',c:-2.86,s:'블록미디어 (아시아경제 −4.11%)',u:'https://www.blockmedia.co.kr/archives/1163075',est:1},
+    {n:'엔비디아',p:'종가 미확보',c:-3.9,s:'장중 약 −3.9%',u:'https://www.staradvertiser.com/2026/11/09/breaking-news/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/',est:1},
+    {n:'테슬라',p:'종가 미확보',c:4.5,s:'보도 문장 모호',u:'https://gvwire.com/2026/11/09/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/',est:1}
+  ];
+  const EV=[
+    {d:'2026-11-10',e:'미국 10월 CPI',x:'예상 헤드라인 +0.3% m/m · 결과 미확보',u:'https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect',s:'Kiplinger'},
+    {d:'2026-11-17',e:'엔비디아 실적',x:'11/17 또는 11/18 · 회사 공식 확인 전',u:'https://www.earningswhispers.com/stocks/Nvda',s:'Earnings Whispers',est:1},
+    {d:'2026-11-26',e:'한국은행 금통위',x:'현 기준금리 3.00% · 인상 전망 보도 있음',u:'https://www.koreancenter.or.kr/news/articleView.html?idxno=1428068',s:'머니투데이 인용'},
+    {d:'2026-12-08',e:'FOMC',x:'12/8~9',u:'https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect',s:'Kiplinger'},
+    {d:'2026-12-10',e:'미국 11월 CPI',x:'',u:'https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect',s:'Kiplinger'}
   ];
   const N=[
-    {d:'11/09',s:'블록미디어',t:'코스피 0.8% 하락, 5천선은 지켰다',x:'장중 2% 넘게 올라 5,100선을 찍었다가 오후에 반납하고 5,018.85로 마감. 외국인 약 6,600억원 순매도.',u:'https://www.blockmedia.co.kr/archives/1163141'},
-    {d:'11/09',s:'The Star',t:'뉴욕 증시 급등, 나스닥 +2.7%',x:'다우 +2.2%, 나스닥 +2.7%. 유가 급락이 상승 재료였고 엔비디아는 하락.',u:'https://www.thestar.com.my/news/world/2026/11/10/us-stocks-close-higher'},
-    {d:'11/09',s:'tradingnews',t:'엔비디아만 역행, 시총 약 1,750억달러 증발',x:'지수 급등장에서 엔비디아는 하락했다는 헤드라인. 등락률은 미확보.',u:'https://www.tradingnews.com/news/sp500-hirts-7517-nasdaq-jumps-578-points-dow-climbs-to-52139'},
-    {d:'11/09',s:'아시아경제',t:'코스닥도 0.8% 하락 마감',x:'시총 상위 10개 종목 대부분이 내림.',u:'https://core.asiae.co.kr/article/2026110916013525615'},
-    {d:'11/05',s:'KB Think',t:'코스피·코스닥 급락, 매도 사이드카 발동',x:'양 지수가 5%대 하락. 11/6 코스피 6%대 급락과 서킷브레이커 보도도 있음.',u:'https://kbthink.com/investment/today-pick/2611/261105-2.html'},
-    {d:'11/03',s:'아시아경제',t:'코스닥 4% 하락, 외국인 2조 순매도',x:'외국인 2조116억원, 기관 8,716억원 순매도. 700선에서 마감.',u:'https://core.asiae.co.kr/article/2026110315593522457'},
-    {d:'11월 초',s:'investingLive',t:'시장은 미-이란 소식과 미국 CPI 대기',x:'유럽 시황 랩 제목 기준. 본문 미확인.',u:'https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/'}
+    {d:'11/10',s:'아시아경제',t:'코스피 4.39% 급반등, 매수 사이드카',x:'5,239.13 마감. 장중 5,300 돌파. 유가 하락과 반도체 심리 회복, 외국인·기관 동반 매수.',u:'https://view.asiae.co.kr/article/2026111015344411634'},
+    {d:'11/09',s:'GV Wire',t:'뉴욕, 지난주 AI 급락 딛고 반등. 엔비디아만 하락',x:'과매도 인식과 유가 급락이 재료. 엔비디아는 이사회 조사 보도로 역행.',u:'https://gvwire.com/2026/11/09/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/'},
+    {d:'11/09',s:'파이낸셜뉴스',t:'코스피 5,018 마감, 원/달러 1,347원',x:'장중 4,990~5,172 등락. 코스닥 638.97(−0.82%).',u:FN},
+    {d:'11/06',s:'SBS Biz',t:'코스피 서킷브레이커, 5,059로 마감',x:'개장 직후 8%대 급락. 코스닥 매도 사이드카.',u:'https://biz.sbs.co.kr/amp/article/20000344699'},
+    {d:'11/06',s:'247wallst',t:'VIX 하루 +69.7%, 1990년 이후 세 번째',x:'11/05 VIX 28.18. 전일 16.61.',u:'https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/'},
+    {d:'11/03',s:'아시아경제',t:'코스닥 4% 하락, 외국인 2조 순매도',x:'외국인 2조116억원, 기관 8,716억원 순매도.',u:'https://core.asiae.co.kr/article/2026110315593522457'},
+    {d:'11/26 예정',s:'머니투데이 인용',t:'금통위 앞두고 인상 전망',x:'기준금리 3.00%. 전문가 8명이 3.25% 인상을 전망했다는 보도.',u:'https://www.koreancenter.or.kr/news/articleView.html?idxno=1428068'}
   ];
-  const esc=s=>String(s).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
-  const fmt=c=>c==null?'—':(c>0?'+':'')+c.toFixed(2)+'%';
-  const cls=c=>c==null?'na':c>0?'u-t':c<0?'d-t':'na';
 
-  const spec=document.getElementById('spec');
-  D.filter(r=>r.c!=null&&r.c!==0).forEach((r,i)=>{
-    const w=Math.min(Math.abs(r.c),3)/3*50;
-    const el=document.createElement('div');el.className='row';
-    el.innerHTML='<span class="n">'+esc(r.k)+'</span><span class="track"><span class="b '+(r.c>0?'u':'d')+'" style="width:'+(reduce?w:0)+'%"></span></span><span class="v '+cls(r.c)+'">'+fmt(r.c)+'</span>';
-    spec.appendChild(el);
-    if(!reduce){const b=el.querySelector('.b');b.style.transition='width .7s ease '+(i*90)+'ms';requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width=w+'%'));}
-  });
-
-  const tiles=document.getElementById('tiles');
-  D.forEach(r=>{
-    const el=document.createElement('div');el.className='t'+(r.p?'':' miss');
-    el.innerHTML='<span class="k">'+esc(r.k)+(r.est?' <span class="tag est">추정</span>':'')+'</span>'+
-      '<span class="p">'+(r.p?esc(r.p):'미확보')+'</span>'+
-      '<span class="c '+cls(r.c)+'">'+(r.cs?esc(r.cs):fmt(r.c))+'</span>'+
-      '<span class="s">'+esc(r.d)+(r.u?' · <a href="'+esc(r.u)+'" target="_blank" rel="noopener">'+esc(r.src)+'</a>':'')+'</span>';
-    tiles.appendChild(el);
-  });
-
-  const news=document.getElementById('news');
-  N.forEach(n=>{
-    const li=document.createElement('li');
-    li.innerHTML='<a href="'+esc(n.u)+'" target="_blank" rel="noopener"><span class="m"><span>'+esc(n.d)+'</span><span class="src">'+esc(n.s)+' ↗</span></span><h3>'+esc(n.t)+'</h3><p>'+esc(n.x)+'</p></a>';
-    news.appendChild(li);
-  });
-
-  // 스코프: 등락률이 있는 8개 채널을 봉우리로. 높이 = |등락률|/3, 색 = 상승/하락
-  const ch=D.filter(r=>r.c!=null&&r.c!==0);
+  // ── 스코프 워터폴
+  const ch=D.filter(r=>r.c);
   const cv=document.getElementById('wf'),x=cv.getContext('2d');let W,H,rows=[],f=0;
   function size(){const r=devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*r;cv.height=H*r;x.setTransform(r,0,0,r,0,0);}
   size();addEventListener('resize',size);
   const pos=ch.map((_,i)=>(i+.5)/ch.length);
   function frame(){
     const n=Math.max(60,Math.floor(W/3)),row=[];
-    for(let i=0;i<n;i++){const u=i/n;let v=Math.random()*.12,col=0;
-      ch.forEach((r,k)=>{const a=Math.min(Math.abs(r.c),3)/3*(.85+.15*Math.sin(f/18+k));const g=a*Math.exp(-((u-pos[k])**2)/(2*.018*.018));if(g>v){col=r.c>0?1:-1;}v+=g;});
-      row.push([Math.min(1,v),col]);}
+    for(let i=0;i<n;i++){const u=i/n;let v=Math.random()*.12,col=0,best=0;
+      ch.forEach((r,k)=>{const a=Math.min(Math.abs(r.c),5)/5*(.85+.15*Math.sin(f/18+k));const g=a*Math.exp(-((u-pos[k])**2)/(2*.016*.016));if(g>best){best=g;col=r.c>0?1:-1;}v+=g;});
+      row.push([Math.min(1,v),best>.08?col:0]);}
     rows.unshift(row);const top=H*.5;if(rows.length>Math.ceil((H-top)/2))rows.pop();
     x.fillStyle='#0a1117';x.fillRect(0,0,W,H);
     x.strokeStyle='#15303a';x.lineWidth=1;for(let g=1;g<4;g++){x.beginPath();x.moveTo(0,top*g/4);x.lineTo(W,top*g/4);x.stroke();}
@@ -205,7 +292,100 @@ ul.roe{font-size:14.5px}
   }
   frame();
 
-  const L=[['> 관제실 접속 중...',''],['> 시세 신호 수신 ............ ','8/10','ok'],['> 미확보 채널 ............... ','3','w'],['> 뉴스 피드 복호화 ........... ','7건','ok']];
+  // ── KOSPI 꺾은선 (SVG)
+  (function(){
+    const s=document.getElementById('ksvg'),L=34,R=326,T=14,B=160,lo=4900,hi=5950;
+    const X=i=>L+i*(R-L)/(KS.length-1),Y=v=>B-(v-lo)/(hi-lo)*(B-T);
+    let h='<defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46f0c8" stop-opacity=".28"/><stop offset="1" stop-color="#46f0c8" stop-opacity="0"/></linearGradient><filter id="gl"><feGaussianBlur stdDeviation="2.2"/></filter></defs>';
+    [5000,5400,5800].forEach(v=>{h+='<line x1="'+L+'" x2="'+R+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#15303a"/><text x="'+(L-4)+'" y="'+(Y(v)+3)+'" text-anchor="end">'+v.toLocaleString()+'</text>';});
+    const pts=KS.map((d,i)=>d[1]!=null?[X(i),Y(d[1]),i]:null).filter(Boolean);
+    const a=pts.slice(0,2),b=pts.slice(2);
+    const path=p=>p.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+    h+='<path d="'+path(a)+' L'+a[1][0]+' '+B+' L'+a[0][0]+' '+B+'Z" fill="url(#ga)"/>';
+    h+='<path d="'+path(b)+' L'+b[b.length-1][0]+' '+B+' L'+b[0][0]+' '+B+'Z" fill="url(#ga)"/>';
+    h+='<line x1="'+a[1][0]+'" y1="'+a[1][1]+'" x2="'+b[0][0]+'" y2="'+b[0][1]+'" stroke="#5f8a8f" stroke-dasharray="3 4"/>';
+    h+='<g filter="url(#gl)" opacity=".7"><path d="'+path(a)+'" stroke="#46f0c8" stroke-width="3" fill="none"/><path d="'+path(b)+'" stroke="#46f0c8" stroke-width="3" fill="none"/></g>';
+    h+='<path id="kline" d="'+path(a)+' M'+b.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' L')+'" stroke="#46f0c8" stroke-width="1.8" fill="none" stroke-linejoin="round"/>';
+    pts.forEach((q,k)=>{const last=k===pts.length-1;h+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="'+(last?4.5:3)+'" fill="'+(last?'#ff5d6c':'#0a1117')+'" stroke="'+(last?'#ff5d6c':'#46f0c8')+'" stroke-width="1.5"'+(last?' class="blink"':'')+'/>';
+      const v=KS[q[2]][1],up=q[2]===1||q[2]===7;h+='<text x="'+q[0]+'" y="'+(q[1]+(up?-9:15))+'" text-anchor="middle" fill="#c9e6e2" style="fill:#c9e6e2">'+v.toLocaleString(undefined,{maximumFractionDigits:0})+'</text>';});
+    // 이벤트 마커
+    const cb=X(5);h+='<line x1="'+cb+'" x2="'+cb+'" y1="'+T+'" y2="'+B+'" stroke="#5aa9ff" stroke-dasharray="2 3" opacity=".8"/><text class="ev" x="'+(cb-4)+'" y="'+(T+8)+'" text-anchor="end" style="fill:#5aa9ff">CB 발동</text>';
+    const sc=X(7);h+='<text class="ev" x="'+(sc)+'" y="'+(T+8)+'" text-anchor="end" style="fill:#ff5d6c">매수 사이드카</text>';
+    KS.forEach((d,i)=>{if(i%1===0)h+='<text x="'+X(i)+'" y="'+(B+16)+'" text-anchor="middle"'+(d[1]==null?' opacity=".45"':'')+'>'+d[0].replace('/0','/')+'</text>';});
+    s.innerHTML=h;
+    if(!reduce){const p=s.querySelector('#kline'),len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p.getBoundingClientRect();p.style.transition='stroke-dashoffset 1.6s ease-out';p.style.strokeDashoffset=0;}
+  })();
+
+  // ── 반원 게이지
+  function gauge(id,val,max,bands){
+    const s=document.getElementById(id),cx=80,cy=80,r=62;
+    const pt=(t,rr)=>[cx-rr*Math.cos(Math.PI*t),cy-rr*Math.sin(Math.PI*t)];
+    let h='';let prev=0;
+    bands.forEach(b=>{const [x1,y1]=pt(prev/max,r),[x2,y2]=pt(b[0]/max,r);h+='<path d="M'+x1+' '+y1+' A'+r+' '+r+' 0 0 1 '+x2+' '+y2+'" stroke="'+b[1]+'" stroke-width="9" fill="none" opacity=".85"/>';prev=b[0];});
+    for(let i=0;i<=20;i++){const [a1,b1]=pt(i/20,r-9),[a2,b2]=pt(i/20,r-(i%5?13:17));h+='<line x1="'+a1+'" y1="'+b1+'" x2="'+a2+'" y2="'+b2+'" stroke="#5f8a8f" stroke-width="1"/>';}
+    h+='<g class="needle" id="'+id+'n" style="transform:rotate(0deg)"><line x1="'+cx+'" y1="'+cy+'" x2="'+(cx-r+6)+'" y2="'+cy+'" stroke="#e9fffa" stroke-width="2"/></g><circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#e9fffa"/>';
+    s.innerHTML=h;
+    const deg=Math.min(val,max)/max*180,n=document.getElementById(id+'n');
+    if(reduce)n.style.transform='rotate('+deg+'deg)';else setTimeout(()=>n.style.transform='rotate('+deg+'deg)',400);
+  }
+  gauge('g1',25.64,50,[[15,'#46f0c8'],[25,'#ffb547'],[35,'#ff8a4c'],[50,'#ff5d6c']]);
+  gauge('g2',20,100,[[25,'#5aa9ff'],[45,'#7fb6d9'],[55,'#5f8a8f'],[75,'#ffb547'],[100,'#ff5d6c']]);
+
+  // ── 스펙트럼
+  const spec=document.getElementById('spec');
+  ch.forEach((r,i)=>{
+    const w=Math.min(Math.abs(r.c),5)/5*50;
+    const el=document.createElement('div');el.className='row';
+    el.innerHTML='<span class="n">'+esc(r.k)+'<small>'+esc(r.d)+'</small></span><span class="track"><span class="b '+(r.c>0?'u':'d')+'"></span></span><span class="v '+cls(r.c)+'">'+fmt(r.c)+'</span>';
+    spec.appendChild(el);
+    const b=el.querySelector('.b');if(reduce)b.style.width=w+'%';else{b.style.transitionDelay=(i*70)+'ms';requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width=w+'%'));}
+  });
+
+  // ── 타일
+  const tiles=document.getElementById('tiles');
+  D.concat([{k:'VIX',p:'25.64',cs:'11/05 28.18',cc:0,d:'11/06 종가',src:'247wallst',u:'https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/'}]).forEach(r=>{
+    const el=document.createElement('div');el.className='t'+(r.p?'':' miss');
+    const cc=r.cs?(r.cc<0?'d-t':r.cc>0?'u-t':'na'):cls(r.c);
+    el.innerHTML='<span class="k">'+esc(r.k)+(r.est?' <span class="tag">추정</span>':'')+'</span><span class="p">'+(r.p?esc(r.p):'미확보')+'</span><span class="c '+cc+'">'+(r.cs?esc(r.cs):fmt(r.c))+'</span><span class="s">'+esc(r.d)+' · '+lnk(r.u,r.src)+'</span>';
+    tiles.appendChild(el);
+  });
+
+  // ── 수급
+  const fb=document.getElementById('flowbox'),mx=Math.max(...FL.flatMap(d=>[d.f,d.i,d.r].map(Math.abs)));
+  FL.forEach(d=>{
+    let h='<div class="fday"><span class="dt">'+d.d+(d.est?' <span class="tag">날짜 추정</span>':'')+'</span>';
+    [['외국인',d.f],['기관',d.i],['개인',d.r]].forEach(([k,v])=>{const w=Math.abs(v)/mx*50;
+      h+='<div class="frow"><span>'+k+'</span><span class="track"><span class="b '+(v>0?'u':'d')+'" data-w="'+w+'"></span></span><span class="v '+cls(v)+'">'+(v>0?'+':'')+v.toLocaleString()+'</span></div>';});
+    fb.insertAdjacentHTML('beforeend',h+'</div>');
+  });
+  fb.querySelectorAll('.b').forEach((b,i)=>{if(reduce)b.style.width=b.dataset.w+'%';else{b.style.transitionDelay=(300+i*60)+'ms';requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width=b.dataset.w+'%'));}});
+  fb.insertAdjacentHTML('beforeend','<p class="note">출처: '+lnk('https://www.blockmedia.co.kr/archives/1163075','블록미디어')+' · '+lnk('https://core.asiae.co.kr/article/2026110215450118253','아시아경제')+'</p>');
+
+  // ── 열지도: 등락률 크기 → 색 농도 (±5% 포화)
+  const heat=document.getElementById('heat');
+  ST_.forEach(s=>{
+    const a=(.12+Math.min(Math.abs(s.c),5)/5*.6).toFixed(2),rgb=s.c>0?'255,93,108':'90,169,255';
+    heat.insertAdjacentHTML('beforeend','<div class="h" style="background:rgba('+rgb+','+a+');border-color:rgba('+rgb+',.6)"><span class="hn">'+esc(s.n)+(s.est?' <span class="tag">추정</span>':'')+'</span><span class="hc '+cls(s.c)+'" style="color:#e9fffa">'+fmt(s.c)+'</span><span class="hp">'+esc(s.p)+'</span><span class="hs">'+lnk(s.u,s.s)+'</span></div>');
+  });
+
+  // ── 일정 D-day
+  const cal=document.getElementById('calbox'),now=kstNow();now.setHours(0,0,0,0);
+  EV.forEach(e=>{
+    const dt=new Date(e.d+'T00:00:00'),n=Math.round((dt-now)/864e5);
+    const lab=n>0?'D-'+n:n===0?'D-DAY':'D+'+(-n);
+    cal.insertAdjacentHTML('beforeend','<li><span class="dd'+(n<0?' past':'')+'">'+lab+'</span><div><div class="ce">'+esc(e.e)+(e.est?' <span class="tag">추정</span>':'')+'</div><div class="cd">'+e.d.slice(5).replace('-','/')+(e.x?' · '+esc(e.x):'')+' · '+lnk(e.u,e.s)+'</div></div></li>');
+  });
+
+  // ── 뉴스
+  const news=document.getElementById('news');
+  N.forEach(n=>news.insertAdjacentHTML('beforeend','<li><a href="'+esc(n.u)+'" target="_blank" rel="noopener"><span class="m"><span>'+esc(n.d)+'</span><span class="src">'+esc(n.s)+' ↗</span></span><h3>'+esc(n.t)+'</h3><p>'+esc(n.x)+'</p></a></li>'));
+
+  // ── 이동 탭 활성 표시
+  const tabs=[...document.querySelectorAll('#jump a')],secs=tabs.map(a=>document.querySelector(a.getAttribute('href')));
+  addEventListener('scroll',()=>{let k=0;secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<90)k=i;});tabs.forEach((t,i)=>t.classList.toggle('on',i===k&&scrollY>200));},{passive:true});
+
+  // ── 부팅 로그
+  const L=[['> 관제실 접속 중...',''],['> 시세 채널 수신 ............ ','12/12','ok'],['> 공포 계기 ................. ','경계','w'],['> 사건 로그 복호화 .......... ','5건','ok']];
   const log=document.getElementById('log');
   L.forEach((l,i)=>{const d=document.createElement('div');d.innerHTML=esc(l[0])+(l[1]?'<span class="'+l[2]+'">'+esc(l[1])+'</span>':'');if(!reduce){d.style.opacity=0;d.style.transition='opacity .2s';setTimeout(()=>d.style.opacity=1,150+i*280);}log.appendChild(d);});
 })();
