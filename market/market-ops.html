@@ -132,6 +132,18 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
 .blink{animation:pulse 1.6s ease-in-out infinite}
 .foot{font:11px/1.7 var(--mono);color:var(--dim);letter-spacing:.04em}
 @media (prefers-reduced-motion:reduce){.cur,.blink{animation:none}.needle,.b{transition:none}}
+/* v5 퀀트 신호판 */
+.qx{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line)}
+.qr{background:var(--bg);padding:12px 12px 11px;display:flex;flex-direction:column;gap:6px}
+.qt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.qt .qk{font:600 13px var(--mono);color:var(--hi)}
+.qt .qv{font:600 18px var(--mono);color:var(--warn);font-variant-numeric:tabular-nums;white-space:nowrap}
+.qbar{position:relative;height:10px;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 10%);border-bottom:1px solid var(--line)}
+.qbar .th{position:absolute;top:-3px;bottom:-3px;width:0;border-left:1px dashed var(--dim)}
+.qbar .mk{position:absolute;top:0;width:10px;height:10px;margin-left:-5px;background:var(--warn);box-shadow:0 0 8px var(--warn);transform:rotate(45deg) scale(.8);left:0;transition:left 1s ease}
+.qax{display:flex;justify-content:space-between;font:10px var(--mono);color:var(--dim)}
+.qrd{font:13px/1.5 var(--ko);color:var(--fg)}
+.qs{font:10.5px/1.4 var(--mono);color:var(--dim)}
 /* v4 추가: 퀀트 · 코인 · 3열 게이지 · 갱신 로그 */
 .gauges.g3{grid-template-columns:repeat(3,1fr)}
 .g3 .gv{font-size:20px}
@@ -176,7 +188,7 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
   </div>
 
   <nav class="jump" id="jump" aria-label="섹션 이동">
-    <a href="#chart">차트</a><a href="#quant">퀀트</a><a href="#fear">공포</a><a href="#gauge">계기판</a><a href="#tech">기술주</a><a href="#coin">코인</a><a href="#flow">수급</a><a href="#cal">일정</a><a href="#chain">사건</a><a href="#feed">뉴스</a>
+    <a href="#chart">차트</a><a href="#quant">퀀트</a><a href="#signal">신호판</a><a href="#fear">공포</a><a href="#gauge">계기판</a><a href="#tech">기술주</a><a href="#coin">코인</a><a href="#flow">수급</a><a href="#cal">일정</a><a href="#chain">사건</a><a href="#feed">뉴스</a>
   </nav>
 
   <div class="log" id="log" aria-live="polite"></div>
@@ -201,6 +213,10 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
     <div class="kpis" id="kpis"></div>
     <p class="note">위 수치는 아래 출처 값으로 담당 세션이 직접 계산한 것. 연속되지 않은 소수 표본이라 통계적 의미는 약하다. 변동성 연율화 = 표본표준편차 × √252.</p>
   </div>
+
+  <h2 id="signal">// 퀀트 신호판 <span>문헌 기준 지표</span></h2>
+  <div class="qx" id="qx"></div>
+  <p class="note" id="qxnote"></p>
 
   <h2 id="fear">// 공포 계기</h2>
   <div class="gauges g3" id="gauges"></div>
@@ -414,6 +430,15 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
   const v=rets.map(r=>r[1]),m=v.reduce((a,b)=>a+b,0)/v.length,sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/(v.length-1));
   const absm=v.reduce((a,b)=>a+Math.abs(b),0)/v.length,bounce=(last[1]/Math.min(...known.map(d=>d[1]))-1)*100;
   [[absm.toFixed(2)+'%','일간 등락 절댓값 평균 (n='+v.length+')'],[(sd*Math.sqrt(252)).toFixed(0)+'%','연율화 변동성 (표본)'],['+'+bounce.toFixed(2)+'%','수집구간 저점 대비 반등']].forEach(k=>$('kpis').insertAdjacentHTML('beforeend','<div class="kpi"><span class="kv">'+k[0]+'</span><span class="kl">'+k[1]+'</span></div>'));
+
+  // 퀀트 신호판
+  (D.qx||[]).forEach((q,i)=>{const pos=v=>Math.max(0,Math.min(100,(v-q.lo)/(q.hi-q.lo)*100));
+    let th=(q.th||[]).map(t=>'<span class="th" style="left:'+pos(t)+'%"></span>').join('');
+    $('qx').insertAdjacentHTML('beforeend','<div class="qr"><div class="qt"><span class="qk">'+esc(q.k)+tag(q.est)+'</span><span class="qv">'+esc(q.f)+'</span></div>'
+     +(q.v!=null?'<div class="qbar">'+th+'<span class="mk"></span></div><div class="qax"><span>'+q.lo+'</span><span>'+esc(q.mid||'')+'</span><span>'+q.hi+'</span></div>':'')
+     +'<div class="qrd">'+esc(q.read)+'</div><div class="qs">근거: '+esc(q.ref)+' · 값: '+esc(q.d)+' '+lnk(q.u,q.src)+(q.calc?' · 담당 세션 계산':'')+'</div></div>');
+    const mk=$('qx').lastElementChild.querySelector('.mk');if(mk)grow(mk,'left',pos(q.v)+'%',300+i*100);});
+  $('qxnote').textContent=D.qxnote||'';
 
   // 게이지
   D.gauges.forEach((g,gi)=>{
