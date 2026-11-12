@@ -132,6 +132,37 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
 .blink{animation:pulse 1.6s ease-in-out infinite}
 .foot{font:11px/1.7 var(--mono);color:var(--dim);letter-spacing:.04em}
 @media (prefers-reduced-motion:reduce){.cur,.blink{animation:none}.needle,.b{transition:none}}
+/* v4 추가: 퀀트 · 코인 · 3열 게이지 · 갱신 로그 */
+.gauges.g3{grid-template-columns:repeat(3,1fr)}
+.g3 .gv{font-size:20px}
+.g3 .gk{font-size:10px;letter-spacing:.06em;text-align:center}
+.quant{padding:14px 12px;display:flex;flex-direction:column;gap:14px}
+.qh{font:600 11px var(--mono);color:var(--dim);letter-spacing:.1em}
+.dd-row{display:grid;grid-template-columns:5.6em 1fr 4.6em;gap:8px;align-items:center;font:13px var(--mono);font-variant-numeric:tabular-nums}
+.dd-row small{display:block;font-size:9.5px;color:var(--dim);line-height:1.2}
+.ddtrack{height:12px;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 10%);position:relative}
+.ddbar{position:absolute;left:0;top:2px;height:8px;width:0;background:linear-gradient(90deg,var(--down),rgba(90,169,255,.25));box-shadow:0 0 8px var(--down);transition:width 1s ease}
+.cols{display:flex;align-items:center;gap:6px;height:96px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:relative}
+.cols::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)}
+.col{flex:1;height:100%;position:relative;display:flex;flex-direction:column;align-items:center}
+.col i{position:absolute;left:18%;right:18%;transition:height .8s ease;height:0}
+.col i.u{bottom:50%;background:var(--up);box-shadow:0 0 8px var(--up)}
+.col i.d{top:50%;background:var(--down);box-shadow:0 0 8px var(--down)}
+.col b{position:absolute;font:600 10px var(--mono);font-variant-numeric:tabular-nums}
+.colx{display:flex;gap:6px}.colx span{flex:1;text-align:center;font:10px var(--mono);color:var(--dim)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+.kpi{background:var(--bg);padding:10px 8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .kv{font:600 18px var(--mono);color:var(--hi);font-variant-numeric:tabular-nums}
+.kpi .kl{font:10.5px/1.4 var(--mono);color:var(--dim)}
+.coin{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.cn{border:1px solid var(--line);background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden;min-width:0}
+.cn::after{content:attr(data-sym);position:absolute;right:-6px;bottom:-14px;font:700 54px var(--mono);color:var(--line);pointer-events:none}
+.cn .k{font:600 12px var(--mono);color:var(--warn);letter-spacing:.1em;position:relative;z-index:1}
+.cn .p{font:600 22px var(--mono);color:var(--hi);position:relative;z-index:1}
+.cn .s{font:11px/1.5 var(--mono);color:var(--dim);position:relative;z-index:1}
+.cn .s a{color:var(--dim)}
+.chg-log{font:11px/1.8 var(--mono);color:var(--dim);margin:0;padding:0;list-style:none}
+.chg-log b{color:var(--trace);font-weight:600}
 </style>
 
 <div class="wrap">
@@ -139,33 +170,41 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
 
   <div class="panel wf">
     <canvas id="wf" aria-label="자산별 등락 크기를 봉우리로 그린 스펙트럼 화면"></canvas>
-    <span class="lbl tl">SPAN 11 CH · 최근 등락</span>
-    <span class="lbl tr blink" id="sig">▲ PEAK KOSDAQ +4.48%</span>
-    <span class="lbl bl">KOSPI</span><span class="lbl br">BTC</span>
+    <span class="lbl tl" id="span">SPAN · 최근 등락</span>
+    <span class="lbl tr blink" id="sig">▲ PEAK</span>
+    <span class="lbl bl" id="wl"></span><span class="lbl br" id="wr"></span>
   </div>
 
   <nav class="jump" id="jump" aria-label="섹션 이동">
-    <a href="#chart">차트</a><a href="#fear">공포</a><a href="#gauge">계기판</a><a href="#flow">수급</a><a href="#stocks">종목</a><a href="#cal">일정</a><a href="#chain">사건</a><a href="#feed">뉴스</a>
+    <a href="#chart">차트</a><a href="#quant">퀀트</a><a href="#fear">공포</a><a href="#gauge">계기판</a><a href="#tech">기술주</a><a href="#coin">코인</a><a href="#flow">수급</a><a href="#cal">일정</a><a href="#chain">사건</a><a href="#feed">뉴스</a>
   </nav>
 
   <div class="log" id="log" aria-live="polite"></div>
 
-  <h1><small>BRIEFING · 2026-11-11 수집</small>서킷브레이커 나흘 뒤, 코스피 <em>+4.39%</em> 반등</h1>
-  <p class="lede">11/6 서킷브레이커로 5,059까지 밀렸던 코스피가 11/10 매수 사이드카와 함께 5,239로 올라섰다. 뉴욕은 11/9 AI 과매도 반발과 유가 급락으로 2%대 반등.</p>
+  <h1 id="h1"></h1>
+  <p class="lede" id="lede"></p>
 
-  <h2 id="chart">// KOSPI 궤적 <span>10/30 → 11/10</span></h2>
+  <h2 id="chart">// KOSPI 궤적 <span id="krange"></span></h2>
   <div class="panel chart">
-    <div class="hd"><span class="big">5,239.13</span><span class="chg u-t">+220.28 (+4.39%)</span></div>
-    <svg id="ksvg" viewBox="0 0 340 190" role="img" aria-label="코스피 종가 꺾은선. 10/30 5730.74, 11/2 5859.08, 11/6 5059.69, 11/9 5018.85, 11/10 5239.13. 11/3~11/5는 미확보로 점선."></svg>
-    <p class="note">점선 = 11/3~11/5 종가 미확보 구간. 11/6 등락률은 보도마다 −6.02% / −5.28%로 다름(종가 5,059.69는 11/9 역산과 일치). 출처: <a href="https://biz.sbs.co.kr/amp/article/20000343359" target="_blank" rel="noopener">SBS Biz</a> · <a href="https://core.asiae.co.kr/article/2026110215450118253" target="_blank" rel="noopener">아시아경제</a> · <a href="https://biz.sbs.co.kr/amp/article/20000344699" target="_blank" rel="noopener">SBS Biz</a> · <a href="https://www.fnnews.com/news/202611091612373711" target="_blank" rel="noopener">파이낸셜뉴스</a> · <a href="https://view.asiae.co.kr/article/2026111015344411634" target="_blank" rel="noopener">아시아경제</a></p>
+    <div class="hd"><span class="big" id="kbig"></span><span class="chg" id="kchg"></span></div>
+    <svg id="ksvg" viewBox="0 0 340 190" role="img" aria-label="코스피 종가 꺾은선"></svg>
+    <p class="note" id="knote"></p>
   </div>
 
-  <h2 id="fear">// 공포 계기 <span>11/06 기준</span></h2>
-  <div class="gauges">
-    <div class="g"><svg id="g1" viewBox="0 0 160 92" aria-hidden="true"></svg><span class="gv">25.64</span><span class="gk">VIX</span><span class="gs w">경계 구간</span><span class="gn">11/05 28.18 (하루 +69.7%)<br><a href="https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/" target="_blank" rel="noopener">247wallst</a></span></div>
-    <div class="g"><svg id="g2" viewBox="0 0 160 92" aria-hidden="true"></svg><span class="gv">20</span><span class="gk">FEAR &amp; GREED</span><span class="gs d-t">극단적 공포</span><span class="gn">1주 전 26 · 1달 전 47<br><a href="https://www.placera.se/telegram/fear-greed-index-indikerar-extrem-radsla-i-marknaden-efter-wall-street-raset-20261106" target="_blank" rel="noopener">placera</a></span></div>
+  <h2 id="quant">// 퀀트 판독 <span>담당 세션 계산</span></h2>
+  <div class="panel quant">
+    <div class="qh">고점 대비 낙폭 (DRAWDOWN)</div>
+    <div id="dd" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="qh">KOSPI 일간 수익률 · 수집된 거래일</div>
+    <div class="cols" id="cols"></div>
+    <div class="colx" id="colx"></div>
+    <div class="kpis" id="kpis"></div>
+    <p class="note">위 수치는 아래 출처 값으로 담당 세션이 직접 계산한 것. 연속되지 않은 소수 표본이라 통계적 의미는 약하다. 변동성 연율화 = 표본표준편차 × √252.</p>
   </div>
-  <p class="note">11/9 이후 VIX·공포탐욕 종가는 미확보. 11/9 장중 VIX 21.14(−17.6%) 보도만 있음. 게이지 구간 표시는 담당 세션이 정한 눈금(VIX 15/25/35, 공포탐욕 25/45/55/75).</p>
+
+  <h2 id="fear">// 공포 계기</h2>
+  <div class="gauges g3" id="gauges"></div>
+  <p class="note" id="gnote"></p>
 
   <div class="panel spec" aria-label="자산별 최근 등락률 막대">
     <div class="hd"><span>최근 등락 스펙트럼</span><span>±5%</span></div>
@@ -176,26 +215,25 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
   <h2 id="gauge">// 계기판</h2>
   <div class="grid" id="tiles"></div>
 
-  <h2 id="flow">// 투자자 수급 <span>KOSPI · 억원</span></h2>
-  <div class="alarm"><span class="x">−4.96조</span><p>11/6 서킷브레이커 날 외국인 순매도. 단일 매체 보도라 미검증. <a href="https://biz.sbs.co.kr/amp/article/20000344699" target="_blank" rel="noopener" class="na">SBS Biz</a></p></div>
-  <div class="panel flow" id="flowbox"></div>
-  <p class="note">11/09 수치는 매체마다 수백억 차이(뉴시스 −6,900 / 아시아경제 −6,470 등). 여기선 블록미디어 값. 11/02 날짜는 기사 주소 기준 추정. 11/10은 외국인·기관 동반 매수라는 보도만 있고 금액 미확보.</p>
-
-  <h2 id="stocks">// 종목 열지도 <span>11/09</span></h2>
+  <h2 id="tech">// 기술주 레이더 <span id="techd"></span></h2>
   <div class="heat" id="heat"></div>
-  <p class="note">LG에너지솔루션, 애플, MS, 알파벳, 아마존, 메타는 미확보.</p>
+  <p class="note" id="technote"></p>
+
+  <h2 id="coin">// 코인</h2>
+  <div class="coin" id="coins"></div>
+  <div class="panel flow" id="etf"></div>
+  <p class="note" id="coinnote"></p>
+
+  <h2 id="flow">// 투자자 수급 <span>KOSPI · 억원</span></h2>
+  <div class="alarm" id="alarm"></div>
+  <div class="panel flow" id="flowbox"></div>
+  <p class="note" id="flownote"></p>
 
   <h2 id="cal">// 다가오는 일정</h2>
   <ul class="cal" id="calbox"></ul>
 
   <h2 id="chain">// 사건 로그</h2>
-  <ol class="chain">
-    <li><span class="cdt">11/03 · 미국 중간선거</span><p>민주당 상하원 다수 확보. AI 데이터센터·전력 규제 강화 우려가 반도체로 번짐.</p><span class="src"><a href="https://newstomato.com/ReadNews.aspx?no=1319571" target="_blank" rel="noopener">뉴스토마토 외 검색 요약</a></span></li>
-    <li class="dn"><span class="cdt">11/05 · 뉴욕 급락</span><p>S&amp;P −4.4%. VIX 하루 +69.7%로 1990년 이후 세 번째 큰 상승.</p><span class="src"><a href="https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/" target="_blank" rel="noopener">247wallst</a></span></li>
-    <li class="dn"><span class="cdt">11/06 · 코스피 서킷브레이커</span><p>개장 직후 8%대 급락, 09:03 1단계 서킷브레이커(올해 11번째). 코스닥 매도 사이드카. 종가 5,059.69.</p><span class="src"><a href="https://biz.sbs.co.kr/amp/article/20000344699" target="_blank" rel="noopener">SBS Biz</a></span></li>
-    <li class="upx"><span class="cdt">11/09 · 뉴욕 반등</span><p>AI 과매도 인식과 브렌트유 −5.8%. S&amp;P +2.35%. 엔비디아는 이사회의 CEO 조사 착수 보도로 역행.</p><span class="src"><a href="https://gvwire.com/2026/11/09/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/" target="_blank" rel="noopener">GV Wire(AP)</a></span></li>
-    <li class="upx"><span class="cdt">11/10 · 코스피 매수 사이드카</span><p>+4.39% 5,239.13. 유가 하락, 반도체 심리 회복, 외국인·기관 동반 매수.</p><span class="src"><a href="https://view.asiae.co.kr/article/2026111015344411634" target="_blank" rel="noopener">아시아경제</a></span></li>
-  </ol>
+  <ol class="chain" id="chainbox"></ol>
 
   <h2 id="feed">// 수신 뉴스</h2>
   <ul class="news" id="news"></ul>
@@ -204,83 +242,121 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
   <ul class="roe">
     <li><span>R-01</span><div>숫자는 웹 검색 요약에서 옮긴 스냅샷이다. 실시간이 아니고 원문은 열람하지 못했다.</div></li>
     <li><span>R-02</span><div>자산마다 기준일이 다르다. <span class="tag">추정</span>은 날짜나 값이 확정되지 않은 것.</div></li>
-    <li><span>R-03</span><div>매매 전에는 출처를 눌러 원문을 직접 확인한다.</div></li>
+    <li><span>R-03</span><div>퀀트 판독과 게이지 눈금은 담당 세션이 계산·설정한 것이다. 투자 신호가 아니다.</div></li>
+    <li><span>R-04</span><div>매매 전에는 출처를 눌러 원문을 직접 확인한다.</div></li>
   </ul>
 
-  <div class="foot">빨강 = 상승 · 파랑 = 하락 (국내 관례)<br>미확보: 11/11 국내 종가 · 11/10 미국 종가 · 10월 CPI 결과<br>NEXT TRANSMISSION · 갱신은 요청 시 <span class="cur"></span></div>
+  <h2>// 갱신 기록</h2>
+  <ul class="chg-log" id="chg"></ul>
+  <div class="foot">빨강 = 상승 · 파랑 = 하락 (국내 관례)<br><span id="miss"></span><br>NEXT TRANSMISSION · <span id="next"></span> <span class="cur"></span></div>
 </div>
+
+<script type="application/json" id="data">
+{
+"meta":{"asof":"2026-11-12 KST","next":"매일 07:10 · 16:10 KST 자동 갱신 (월~토)",
+ "h1":"CPI 쇼크에 뉴욕 숨 고르기, 반도체는 <em>엇갈림</em>",
+ "lede":"미국 10월 CPI가 예상보다 높게 나와(+0.4% m/m) 11/10 뉴욕 3대 지수가 소폭 하락했다. 같은 날 코스피는 +4.39% 급반등, SK하이닉스 +6.69%. 엔비디아는 CEO 조사 보도로 이틀간 약 10% 밀렸다.",
+ "missing":"미확보: 11/11 국내 종가 · 미국 빅테크 개별 종가 · SOX · 코인 대부분 일자 확정 시세"},
+"changelog":[["11/12","기술주·코인·퀀트 판독 추가, 미국 11/10 종가·CPI 결과 반영"],["11/11","코스피 차트·공포 계기·수급·일정·사건 로그 추가"],["11/11","첫 발행"]],
+"kospi":{"src":"https://view.asiae.co.kr/article/2026111015344411634","series":[["10/30",5730.74,-3.48],["11/02",5859.08,2.24],["11/03",null,null],["11/04",null,null],["11/05",null,null],["11/06",5059.69,-6.02],["11/09",5018.85,-0.81],["11/10",5239.13,4.39]],
+ "events":[["11/06","CB 발동","d"],["11/10","매수 사이드카","u"]],
+ "note":"점선 = 11/3~11/5 종가 미확보. 11/6 등락률은 보도마다 −6.02% / −5.28%. 11/11은 장중 −0.46% 보도만 있고 종가 미확보.",
+ "links":[["SBS Biz","https://biz.sbs.co.kr/amp/article/20000343359"],["아시아경제","https://core.asiae.co.kr/article/2026110215450118253"],["SBS Biz","https://biz.sbs.co.kr/amp/article/20000344699"],["파이낸셜뉴스","https://www.fnnews.com/news/202611091612373711"],["아시아경제","https://view.asiae.co.kr/article/2026111015344411634"]]},
+"drawdown":[
+ {"k":"S&P 500","sub":"vs 10/06 사상 최고 7,818.93","from":7818.93,"to":7520.93,"u":"https://www.ad-hoc-news.de/boerse/news/marktberichte/s-p-500-closes-at-7-549-94-after-2-35-rally/70483327"},
+ {"k":"KOSPI","sub":"vs 수집구간 고점 11/02","from":5859.08,"to":5239.13,"u":"https://core.asiae.co.kr/article/2026110215450118253"},
+ {"k":"NVDA","sub":"11/9~11/10 두 거래일","pct":-10,"est":1,"u":"https://www.bloomberg.com/news/articles/2026-11-10/nvidia-s-bull-case-hinges-on-ceo-huang-surviving-china-spy-probe"}],
+"gauges":[
+ {"k":"VIX","v":25.64,"max":50,"d":"11/06 종가","lab":"경계","cls":"w","bands":[[15,"#46f0c8"],[25,"#ffb547"],[35,"#ff8a4c"],[50,"#ff5d6c"]],"src":"247wallst","u":"https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/"},
+ {"k":"주식 공포탐욕","v":20,"max":100,"d":"11/06","lab":"극단적 공포","cls":"d-t","bands":[[25,"#5aa9ff"],[45,"#7fb6d9"],[55,"#5f8a8f"],[75,"#ffb547"],[100,"#ff5d6c"]],"src":"placera","u":"https://www.placera.se/telegram/fear-greed-index-indikerar-extrem-radsla-i-marknaden-efter-wall-street-raset-20261106"},
+ {"k":"코인 공포탐욕","v":34,"max":100,"d":"11/04","lab":"공포","cls":"d-t","est":1,"bands":[[25,"#5aa9ff"],[45,"#7fb6d9"],[55,"#5f8a8f"],[75,"#ffb547"],[100,"#ff5d6c"]],"src":"EdgeX","u":"https://pro.edgex.exchange/en-US/news/article/bitcoin-77k-market-cycle-anxiety-stage"}],
+"gnote":"VIX 11/10 20.96 보도는 장중 스냅샷으로 보여 제외. 코인 공포탐욕은 원 지표(alternative.me) 확인 전. 게이지 구간은 담당 세션이 정한 눈금.",
+"tiles":[
+ {"k":"KOSPI","p":"5,239.13","c":4.39,"d":"11/10 종가","src":"아시아경제","u":"https://view.asiae.co.kr/article/2026111015344411634"},
+ {"k":"KOSDAQ","p":"667.61","c":4.48,"d":"11/10 종가","src":"Businesskorea","u":"https://www.businesskorea.co.kr/news/articleView.html?idxno=280945"},
+ {"k":"S&P 500","p":"7,520.93","c":-0.38,"d":"11/10 종가","est":1,"src":"TheStreet","u":"https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-nov-10-2026"},
+ {"k":"NASDAQ","p":"25,065.87","c":-0.74,"d":"11/10 종가","src":"SBS","u":"https://news.sbs.co.kr/english/article.do?news_id=N1008840259"},
+ {"k":"DOW","p":"52,231.89","c":-0.30,"d":"11/10 종가","src":"Sharecast","u":"https://www.sharecast.com/news/market-report-us-close/wall-street-nyse-dow-jones-nasdaq-stocks-equities--24118290.html"},
+ {"k":"NIKKEI","p":"58,775","c":2.33,"d":"11/09","src":"tradingeconomics","u":"https://tradingeconomics.com/japan/stock-market/news/598952"},
+ {"k":"USD/KRW","p":"1,347.1","cs":"−9.5원","cc":-1,"d":"11/09 정규장","src":"파이낸셜뉴스","u":"https://www.fnnews.com/news/202611091612373711"},
+ {"k":"US CPI 10월","p":"+0.4%","cs":"예상 +0.3% 상회","cc":1,"d":"11/10 발표 · 근원 +0.3%","src":"Upstox","u":"https://upstox.com/news/market-news/us-stocks/us-stocks-settle-lower-as-october-cpi-data-raise-rate-hike-expectations-nvidia-down-6/article-203253/"},
+ {"k":"WTI","p":"$88.57","c":-2.57,"d":"날짜 미상","est":1,"src":"investingLive","u":"https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/"},
+ {"k":"GOLD","p":"$4,109","c":1.07,"d":"날짜 미상","est":1,"src":"investingLive","u":"https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/"}],
+"tech":{"d":"11/10","items":[
+ {"n":"SK하이닉스","p":"1,212,000원","c":6.69,"s":"Businesskorea","u":"https://www.businesskorea.co.kr/news/articleView.html?idxno=280945"},
+ {"n":"삼성전자","p":"198,900원","c":4.74,"s":"Businesskorea","u":"https://www.businesskorea.co.kr/news/articleView.html?idxno=280945"},
+ {"n":"엔비디아","p":"종가 미확보","c":-5.47,"s":"Bloomberg (Upstox −6%)","est":1,"u":"https://www.bloomberg.com/news/articles/2026-11-10/nvidia-s-bull-case-hinges-on-ceo-huang-surviving-china-spy-probe"},
+ {"n":"S&P 기술섹터","p":"섹터 지수","c":-1.13,"s":"TheStreet","u":"https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-nov-10-2026"}],
+ "note":"엔비디아: 이사회가 CEO 젠슨 황 관련 독립 조사 착수(11/8) 보도. 11/11 장중 +2.87% 반등 보도는 종가 아님. 애플·MS·알파벳·아마존·메타·테슬라·브로드컴·AMD·TSMC·팔란티어·네이버·카카오·SOX는 미확보."},
+"coins":[
+ {"k":"BTC","p":"~$74,400","d":"11/09 기술분석 리포트 · 약 10억달러 청산 후","est":1,"src":"검색 요약","u":"https://t.me/s/CryptoHeadlines365"},
+ {"k":"ETH","p":"~$2,250","d":"11월 초 · 11/9 삼각수렴 하단 이탈 보도","est":1,"src":"EdgeX","u":"https://pro.edgex.exchange/en-US/news/article/bitcoin-77k-market-cycle-anxiety-stage"}],
+"etf":{"title":"미국 BTC 현물 ETF 순유출 (백만 달러)","rows":[["10/30",-643.3],["11/02",-398.6]],"u":"https://www.nasdaq.com/articles/crypto-market-update-crypto-outflows-hit-us-13-billion-second-week","src":"Nasdaq 외"},
+"coinnote":"코인은 날짜가 확정된 시세를 거의 못 찾았다. SOL·XRP·BNB·DOGE, BTC 도미넌스, 전체 시총, 최신 ETF 흐름은 미확보. 날짜 없는 텔레그램 시세와 연도가 불분명한 'BTC $81K' 기사는 쓰지 않았다.",
+"alarm":{"x":"−4.96조","t":"11/6 서킷브레이커 날 외국인 순매도. 단일 매체 보도라 미검증.","src":"SBS Biz","u":"https://biz.sbs.co.kr/amp/article/20000344699"},
+"flows":[{"d":"11/09","f":-6930,"i":7204,"r":-4887},{"d":"11/02","f":-3731,"i":12329,"r":-13475,"est":1}],
+"flownote":"11/09는 매체마다 수백억 차이(블록미디어 값 사용). 11/02 날짜는 기사 주소 기준 추정. 11/10은 외국인·기관 동반 매수 보도만 있고 금액 미확보.",
+"flowlinks":[["블록미디어","https://www.blockmedia.co.kr/archives/1163075"],["아시아경제","https://core.asiae.co.kr/article/2026110215450118253"]],
+"events":[
+ {"d":"2026-11-10","e":"미국 10월 CPI","x":"결과 +0.4% (예상 +0.3%) · 근원 +0.3%","s":"Upstox","u":"https://upstox.com/news/market-news/us-stocks/us-stocks-settle-lower-as-october-cpi-data-raise-rate-hike-expectations-nvidia-down-6/article-203253/"},
+ {"d":"2026-11-17","e":"엔비디아 실적","x":"11/17 또는 11/18 · 공식 확인 전","est":1,"s":"Earnings Whispers","u":"https://www.earningswhispers.com/stocks/Nvda"},
+ {"d":"2026-11-26","e":"한국은행 금통위","x":"현 3.00% · 인상 전망 보도","s":"머니투데이 인용","u":"https://www.koreancenter.or.kr/news/articleView.html?idxno=1428068"},
+ {"d":"2026-12-08","e":"FOMC","x":"12/8~9 · 시장은 12월 인상 반영 중(보도)","s":"Reuters 경유","u":"https://finwire.io/news/stock-markets-news/us-stock-futures-steady-after-tech-led-rebound-cpi-in-focus"},
+ {"d":"2026-12-10","e":"미국 11월 CPI","x":"","s":"Kiplinger","u":"https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect"}],
+"chain":[
+ {"c":"","d":"11/03 · 미국 중간선거","t":"민주당 상하원 다수 확보. AI 데이터센터·전력 규제 강화 우려가 반도체로 번짐.","s":"뉴스토마토 외 검색 요약","u":"https://newstomato.com/ReadNews.aspx?no=1319571"},
+ {"c":"dn","d":"11/05 · 뉴욕 급락","t":"S&P −4.4%. VIX 하루 +69.7%로 1990년 이후 세 번째 큰 상승.","s":"247wallst","u":"https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/"},
+ {"c":"dn","d":"11/06 · 코스피 서킷브레이커","t":"개장 직후 8%대 급락, 1단계 서킷브레이커. 종가 5,059.69.","s":"SBS Biz","u":"https://biz.sbs.co.kr/amp/article/20000344699"},
+ {"c":"dn","d":"11/08 · 엔비디아 CEO 조사","t":"이사회가 젠슨 황 관련 독립 조사 착수. 11/9 −4.27%, 11/10 −5.47%.","s":"CNBC","u":"https://www.cnbc.com/2026/11/09/nvidia-jensen-huang-chinese-spy-investigation.html"},
+ {"c":"upx","d":"11/09 · 뉴욕 반등","t":"AI 과매도 인식과 유가 급락. S&P +2.35%.","s":"GV Wire(AP)","u":"https://gvwire.com/2026/11/09/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/"},
+ {"c":"upx","d":"11/10 · 코스피 매수 사이드카","t":"+4.39% 5,239.13. SK하이닉스 +6.69%, 삼성전자 +4.74%.","s":"아시아경제","u":"https://view.asiae.co.kr/article/2026111015344411634"},
+ {"c":"dn","d":"11/10 · CPI 상회, 뉴욕 소폭 하락","t":"CPI +0.4%로 예상 상회. 12월 금리 인상 기대 확대. S&P −0.38%.","s":"Upstox","u":"https://upstox.com/news/market-news/us-stocks/us-stocks-settle-lower-as-october-cpi-data-raise-rate-hike-expectations-nvidia-down-6/article-203253/"}],
+"news":[
+ {"d":"11/11","s":"CNBC","t":"엔비디아, CEO 조사 여파 속 장중 반등","x":"11/11 장중 +2.87%. 이사회의 젠슨 황 조사 관련 후속 보도.","u":"https://www.cnbc.com/2026/11/11/nvidia-stock-jensen-huang-affair-china.html"},
+ {"d":"11/10","s":"Upstox","t":"CPI 예상 상회에 뉴욕 하락 마감, 엔비디아 −6%","x":"10월 CPI +0.4%, 근원 +0.3%. 금리 인상 기대 확대.","u":"https://upstox.com/news/market-news/us-stocks/us-stocks-settle-lower-as-october-cpi-data-raise-rate-hike-expectations-nvidia-down-6/article-203253/"},
+ {"d":"11/10","s":"Bloomberg","t":"엔비디아 강세론, 젠슨 황 거취에 달려","x":"두 거래일 약 10% 하락.","u":"https://www.bloomberg.com/news/articles/2026-11-10/nvidia-s-bull-case-hinges-on-ceo-huang-surviving-china-spy-probe"},
+ {"d":"11/10","s":"아시아경제","t":"코스피 4.39% 급반등, 매수 사이드카","x":"5,239.13 마감. 외국인·기관 동반 매수.","u":"https://view.asiae.co.kr/article/2026111015344411634"},
+ {"d":"11/10","s":"Businesskorea","t":"SK하이닉스 +6.69%, 삼성전자 +4.74%","x":"반도체 대형주가 반등을 이끔.","u":"https://www.businesskorea.co.kr/news/articleView.html?idxno=280945"},
+ {"d":"11/10","s":"Reuters 경유","t":"월러, 12월 인상 지지 기울어… 50bp도 열어둬","x":"시장은 12월 금리 인상을 반영 중.","u":"https://finwire.io/news/stock-markets-news/us-stock-futures-steady-after-tech-led-rebound-cpi-in-focus"},
+ {"d":"11/06","s":"SBS Biz","t":"코스피 서킷브레이커, 5,059로 마감","x":"개장 직후 8%대 급락. 코스닥 매도 사이드카.","u":"https://biz.sbs.co.kr/amp/article/20000344699"}]
+}
+</script>
 
 <script>
 (function(){
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const NS='http://www.w3.org/2000/svg';
+  const D=JSON.parse(document.getElementById('data').textContent);
+  const $=id=>document.getElementById(id);
   const esc=s=>String(s).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
   const fmt=c=>c==null?'—':(c>0?'+':'')+c.toFixed(2)+'%';
   const cls=c=>c==null?'na':c>0?'u-t':c<0?'d-t':'na';
   const lnk=(u,s)=>u?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(s)+'</a>':'';
-  const kstNow=()=>new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
+  const tag=e=>e?' <span class="tag">추정</span>':'';
+  const grow=(el,prop,val,delay)=>{if(reduce){el.style[prop]=val;return;}el.style.transitionDelay=(delay||0)+'ms';requestAnimationFrame(()=>requestAnimationFrame(()=>el.style[prop]=val));};
 
-  const clk=document.getElementById('clk');
-  const tick=()=>clk.textContent='KST '+new Date().toLocaleTimeString('ko-KR',{hour12:false,timeZone:'Asia/Seoul'});
+  const tick=()=>$('clk').textContent='KST '+new Date().toLocaleTimeString('ko-KR',{hour12:false,timeZone:'Asia/Seoul'});
   tick();setInterval(tick,1000);
 
-  // ── 데이터: 서브에이전트 웹검색 스냅샷 2건(2026-11-11). 검색 요약 그대로, 없으면 null.
-  const IL='https://investinglive.com/news/investinglive-european-news-wrap-markets-await-fresh-us-iran-developments-us-cpi-data/';
-  const ST='https://www.thestar.com.my/news/world/2026/11/10/us-stocks-close-higher';
-  const FN='https://www.fnnews.com/news/202611091612373711';
-  const D=[
-    {k:'KOSPI',p:'5,239.13',c:4.39,d:'11/10 종가',src:'아시아경제',u:'https://view.asiae.co.kr/article/2026111015344411634'},
-    {k:'KOSDAQ',p:'667.61',c:4.48,d:'11/10 종가',src:'파이낸셜뉴스',u:FN},
-    {k:'NIKKEI',p:'58,775',c:2.33,d:'11/09',src:'tradingeconomics',u:'https://tradingeconomics.com/japan/stock-market/news/598952'},
-    {k:'S&P 500',p:'7,549.94',c:2.35,d:'11/09',src:'The Star',u:ST},
-    {k:'NASDAQ',p:'25,253.14',c:2.74,d:'11/09',src:'The Star',u:ST},
-    {k:'DOW',p:'52,389.75',c:2.15,d:'11/09',src:'The Star',u:ST},
-    {k:'USD/KRW',p:'1,347.1',cs:'−9.5원',cc:-1,d:'11/09 정규장',src:'파이낸셜뉴스',u:FN},
-    {k:'US 10Y',p:'4.859%',c:0,cs:'보합',d:'날짜 미상',est:1,src:'investingLive',u:IL},
-    {k:'WTI',p:'$88.57',c:-2.57,d:'날짜 미상',est:1,src:'investingLive',u:IL},
-    {k:'GOLD',p:'$4,109',c:1.07,d:'날짜 미상',est:1,src:'investingLive',u:IL},
-    {k:'BTC',p:'$74,450',c:0.53,d:'날짜 미상',est:1,src:'investingLive',u:IL}
-  ];
-  const KS=[ // 거래일 슬롯: 10/30, 11/2, 11/3, 11/4, 11/5, 11/6, 11/9, 11/10
-    ['10/30',5730.74],['11/02',5859.08],['11/03',null],['11/04',null],['11/05',null],['11/06',5059.69],['11/09',5018.85],['11/10',5239.13]];
-  const FL=[
-    {d:'11/09',f:-6930,i:7204,r:-4887},
-    {d:'11/02',f:-3731,i:12329,r:-13475,est:1}
-  ];
-  const ST_=[
-    {n:'삼성전자',p:'189,900원',c:0.64,s:'블록미디어',u:'https://www.blockmedia.co.kr/archives/1163075'},
-    {n:'SK하이닉스',p:'1,136,000원',c:0.35,s:'블록미디어',u:'https://www.blockmedia.co.kr/archives/1163075'},
-    {n:'현대차',p:'271,500원',c:-2.86,s:'블록미디어 (아시아경제 −4.11%)',u:'https://www.blockmedia.co.kr/archives/1163075',est:1},
-    {n:'엔비디아',p:'종가 미확보',c:-3.9,s:'장중 약 −3.9%',u:'https://www.staradvertiser.com/2026/11/09/breaking-news/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/',est:1},
-    {n:'테슬라',p:'종가 미확보',c:4.5,s:'보도 문장 모호',u:'https://gvwire.com/2026/11/09/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/',est:1}
-  ];
-  const EV=[
-    {d:'2026-11-10',e:'미국 10월 CPI',x:'예상 헤드라인 +0.3% m/m · 결과 미확보',u:'https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect',s:'Kiplinger'},
-    {d:'2026-11-17',e:'엔비디아 실적',x:'11/17 또는 11/18 · 회사 공식 확인 전',u:'https://www.earningswhispers.com/stocks/Nvda',s:'Earnings Whispers',est:1},
-    {d:'2026-11-26',e:'한국은행 금통위',x:'현 기준금리 3.00% · 인상 전망 보도 있음',u:'https://www.koreancenter.or.kr/news/articleView.html?idxno=1428068',s:'머니투데이 인용'},
-    {d:'2026-12-08',e:'FOMC',x:'12/8~9',u:'https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect',s:'Kiplinger'},
-    {d:'2026-12-10',e:'미국 11월 CPI',x:'',u:'https://www.kiplinger.com/investing/economy/october-2026-cpi-report-what-to-expect',s:'Kiplinger'}
-  ];
-  const N=[
-    {d:'11/10',s:'아시아경제',t:'코스피 4.39% 급반등, 매수 사이드카',x:'5,239.13 마감. 장중 5,300 돌파. 유가 하락과 반도체 심리 회복, 외국인·기관 동반 매수.',u:'https://view.asiae.co.kr/article/2026111015344411634'},
-    {d:'11/09',s:'GV Wire',t:'뉴욕, 지난주 AI 급락 딛고 반등. 엔비디아만 하락',x:'과매도 인식과 유가 급락이 재료. 엔비디아는 이사회 조사 보도로 역행.',u:'https://gvwire.com/2026/11/09/wall-street-rallies-after-last-weeks-ai-rout-nvidia-falls/'},
-    {d:'11/09',s:'파이낸셜뉴스',t:'코스피 5,018 마감, 원/달러 1,347원',x:'장중 4,990~5,172 등락. 코스닥 638.97(−0.82%).',u:FN},
-    {d:'11/06',s:'SBS Biz',t:'코스피 서킷브레이커, 5,059로 마감',x:'개장 직후 8%대 급락. 코스닥 매도 사이드카.',u:'https://biz.sbs.co.kr/amp/article/20000344699'},
-    {d:'11/06',s:'247wallst',t:'VIX 하루 +69.7%, 1990년 이후 세 번째',x:'11/05 VIX 28.18. 전일 16.61.',u:'https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/'},
-    {d:'11/03',s:'아시아경제',t:'코스닥 4% 하락, 외국인 2조 순매도',x:'외국인 2조116억원, 기관 8,716억원 순매도.',u:'https://core.asiae.co.kr/article/2026110315593522457'},
-    {d:'11/26 예정',s:'머니투데이 인용',t:'금통위 앞두고 인상 전망',x:'기준금리 3.00%. 전문가 8명이 3.25% 인상을 전망했다는 보도.',u:'https://www.koreancenter.or.kr/news/articleView.html?idxno=1428068'}
-  ];
+  $('h1').innerHTML='<small>BRIEFING · '+esc(D.meta.asof)+'</small>'+D.meta.h1;
+  $('lede').textContent=D.meta.lede;
+  $('miss').textContent=D.meta.missing;
+  $('next').textContent=D.meta.next;
+  D.changelog.forEach(c=>$('chg').insertAdjacentHTML('beforeend','<li><b>'+esc(c[0])+'</b> '+esc(c[1])+'</li>'));
 
-  // ── 스코프 워터폴
-  const ch=D.filter(r=>r.c);
-  const cv=document.getElementById('wf'),x=cv.getContext('2d');let W,H,rows=[],f=0;
+  // 스코프
+  const ch=D.tiles.filter(r=>r.c).concat(D.tech.items.map(t=>({k:t.n,c:t.c})));
+  $('span').textContent='SPAN '+ch.length+' CH · 최근 등락';
+  const pk=ch.reduce((a,b)=>Math.abs(b.c)>Math.abs(a.c)?b:a);
+  $('sig').textContent=(pk.c>0?'▲':'▼')+' PEAK '+pk.k+' '+fmt(pk.c);
+  $('wl').textContent=ch[0].k;$('wr').textContent=ch[ch.length-1].k;
+  const cv=$('wf'),x=cv.getContext('2d');let W,H,rows=[],f=0;
   function size(){const r=devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*r;cv.height=H*r;x.setTransform(r,0,0,r,0,0);}
   size();addEventListener('resize',size);
   const pos=ch.map((_,i)=>(i+.5)/ch.length);
   function frame(){
     const n=Math.max(60,Math.floor(W/3)),row=[];
     for(let i=0;i<n;i++){const u=i/n;let v=Math.random()*.12,col=0,best=0;
-      ch.forEach((r,k)=>{const a=Math.min(Math.abs(r.c),5)/5*(.85+.15*Math.sin(f/18+k));const g=a*Math.exp(-((u-pos[k])**2)/(2*.016*.016));if(g>best){best=g;col=r.c>0?1:-1;}v+=g;});
+      ch.forEach((r,k)=>{const a=Math.min(Math.abs(r.c),6)/6*(.85+.15*Math.sin(f/18+k));const g=a*Math.exp(-((u-pos[k])**2)/(2*.013*.013));if(g>best){best=g;col=r.c>0?1:-1;}v+=g;});
       row.push([Math.min(1,v),best>.08?col:0]);}
     rows.unshift(row);const top=H*.5;if(rows.length>Math.ceil((H-top)/2))rows.pop();
     x.fillStyle='#0a1117';x.fillRect(0,0,W,H);
@@ -292,101 +368,113 @@ ul.roe li span{font:600 11px var(--mono);color:var(--warn);padding-top:3px}
   }
   frame();
 
-  // ── KOSPI 꺾은선 (SVG)
+  // KOSPI 꺾은선
+  const KS=D.kospi.series,known=KS.filter(d=>d[1]!=null),last=known[known.length-1],prev=known[known.length-2];
+  $('krange').textContent=KS[0][0]+' → '+last[0];
+  $('kbig').textContent=last[1].toLocaleString(undefined,{minimumFractionDigits:2});
+  const dif=last[1]-prev[1];$('kchg').className='chg '+cls(dif);$('kchg').textContent=(dif>0?'+':'')+dif.toFixed(2)+' ('+fmt(last[2])+')';
+  $('knote').innerHTML=esc(D.kospi.note)+' 출처: '+D.kospi.links.map(l=>lnk(l[1],l[0])).join(' · ');
   (function(){
-    const s=document.getElementById('ksvg'),L=34,R=326,T=14,B=160,lo=4900,hi=5950;
+    const s=$('ksvg'),L=34,R=326,T=14,B=160;
+    const vals=known.map(d=>d[1]),lo=Math.floor((Math.min(...vals)-120)/100)*100,hi=Math.ceil((Math.max(...vals)+90)/100)*100;
     const X=i=>L+i*(R-L)/(KS.length-1),Y=v=>B-(v-lo)/(hi-lo)*(B-T);
     let h='<defs><linearGradient id="ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46f0c8" stop-opacity=".28"/><stop offset="1" stop-color="#46f0c8" stop-opacity="0"/></linearGradient><filter id="gl"><feGaussianBlur stdDeviation="2.2"/></filter></defs>';
-    [5000,5400,5800].forEach(v=>{h+='<line x1="'+L+'" x2="'+R+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#15303a"/><text x="'+(L-4)+'" y="'+(Y(v)+3)+'" text-anchor="end">'+v.toLocaleString()+'</text>';});
-    const pts=KS.map((d,i)=>d[1]!=null?[X(i),Y(d[1]),i]:null).filter(Boolean);
-    const a=pts.slice(0,2),b=pts.slice(2);
+    const step=(hi-lo)>800?400:200;
+    for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)h+='<line x1="'+L+'" x2="'+R+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#15303a"/><text x="'+(L-4)+'" y="'+(Y(v)+3)+'" text-anchor="end">'+v.toLocaleString()+'</text>';
+    // 연속 구간 분할
+    const segs=[];let cur=[];KS.forEach((d,i)=>{if(d[1]!=null)cur.push([X(i),Y(d[1]),i]);else if(cur.length){segs.push(cur);cur=[];}});if(cur.length)segs.push(cur);
     const path=p=>p.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
-    h+='<path d="'+path(a)+' L'+a[1][0]+' '+B+' L'+a[0][0]+' '+B+'Z" fill="url(#ga)"/>';
-    h+='<path d="'+path(b)+' L'+b[b.length-1][0]+' '+B+' L'+b[0][0]+' '+B+'Z" fill="url(#ga)"/>';
-    h+='<line x1="'+a[1][0]+'" y1="'+a[1][1]+'" x2="'+b[0][0]+'" y2="'+b[0][1]+'" stroke="#5f8a8f" stroke-dasharray="3 4"/>';
-    h+='<g filter="url(#gl)" opacity=".7"><path d="'+path(a)+'" stroke="#46f0c8" stroke-width="3" fill="none"/><path d="'+path(b)+'" stroke="#46f0c8" stroke-width="3" fill="none"/></g>';
-    h+='<path id="kline" d="'+path(a)+' M'+b.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' L')+'" stroke="#46f0c8" stroke-width="1.8" fill="none" stroke-linejoin="round"/>';
-    pts.forEach((q,k)=>{const last=k===pts.length-1;h+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="'+(last?4.5:3)+'" fill="'+(last?'#ff5d6c':'#0a1117')+'" stroke="'+(last?'#ff5d6c':'#46f0c8')+'" stroke-width="1.5"'+(last?' class="blink"':'')+'/>';
-      const v=KS[q[2]][1],up=q[2]===1||q[2]===7;h+='<text x="'+q[0]+'" y="'+(q[1]+(up?-9:15))+'" text-anchor="middle" fill="#c9e6e2" style="fill:#c9e6e2">'+v.toLocaleString(undefined,{maximumFractionDigits:0})+'</text>';});
-    // 이벤트 마커
-    const cb=X(5);h+='<line x1="'+cb+'" x2="'+cb+'" y1="'+T+'" y2="'+B+'" stroke="#5aa9ff" stroke-dasharray="2 3" opacity=".8"/><text class="ev" x="'+(cb-4)+'" y="'+(T+8)+'" text-anchor="end" style="fill:#5aa9ff">CB 발동</text>';
-    const sc=X(7);h+='<text class="ev" x="'+(sc)+'" y="'+(T+8)+'" text-anchor="end" style="fill:#ff5d6c">매수 사이드카</text>';
-    KS.forEach((d,i)=>{if(i%1===0)h+='<text x="'+X(i)+'" y="'+(B+16)+'" text-anchor="middle"'+(d[1]==null?' opacity=".45"':'')+'>'+d[0].replace('/0','/')+'</text>';});
+    segs.forEach(sg=>{if(sg.length>1)h+='<path d="'+path(sg)+' L'+sg[sg.length-1][0]+' '+B+' L'+sg[0][0]+' '+B+'Z" fill="url(#ga)"/>';});
+    for(let k=1;k<segs.length;k++){const a=segs[k-1][segs[k-1].length-1],b=segs[k][0];h+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="#5f8a8f" stroke-dasharray="3 4"/>';}
+    h+='<g filter="url(#gl)" opacity=".7">'+segs.map(sg=>'<path d="'+path(sg)+'" stroke="#46f0c8" stroke-width="3" fill="none"/>').join('')+'</g>';
+    h+='<path id="kline" d="'+segs.map(path).join(' ')+'" stroke="#46f0c8" stroke-width="1.8" fill="none" stroke-linejoin="round"/>';
+    const pts=segs.flat();
+    pts.forEach((q,k)=>{const isL=k===pts.length-1,v=KS[q[2]][1],nb=pts[k-1],na=pts[k+1];const above=k===0||(!nb||nb[1]>q[1])&&(!na||na[1]>q[1])||isL&&dif>0;
+      h+='<circle cx="'+q[0]+'" cy="'+q[1]+'" r="'+(isL?4.5:3)+'" fill="'+(isL?(dif>0?'#ff5d6c':'#5aa9ff'):'#0a1117')+'" stroke="'+(isL?(dif>0?'#ff5d6c':'#5aa9ff'):'#46f0c8')+'" stroke-width="1.5"'+(isL?' class="blink"':'')+'/>';
+      h+='<text x="'+q[0]+'" y="'+(q[1]+(above?-9:15))+'" text-anchor="middle" style="fill:#c9e6e2">'+Math.round(v).toLocaleString()+'</text>';});
+    D.kospi.events.forEach(e=>{const i=KS.findIndex(d=>d[0]===e[0]);if(i<0)return;const c=e[2]==='u'?'#ff5d6c':'#5aa9ff',xx=X(i);
+      if(e[2]!=='u')h+='<line x1="'+xx+'" x2="'+xx+'" y1="'+T+'" y2="'+B+'" stroke="'+c+'" stroke-dasharray="2 3" opacity=".8"/>';
+      h+='<text class="ev" x="'+(i===KS.length-1?xx:xx-4)+'" y="'+(T+8)+'" text-anchor="end" style="fill:'+c+'">'+esc(e[1])+'</text>';});
+    KS.forEach((d,i)=>h+='<text x="'+X(i)+'" y="'+(B+16)+'" text-anchor="middle"'+(d[1]==null?' opacity=".45"':'')+'>'+d[0].replace('/0','/')+'</text>');
     s.innerHTML=h;
     if(!reduce){const p=s.querySelector('#kline'),len=p.getTotalLength();p.style.strokeDasharray=len;p.style.strokeDashoffset=len;p.getBoundingClientRect();p.style.transition='stroke-dashoffset 1.6s ease-out';p.style.strokeDashoffset=0;}
   })();
 
-  // ── 반원 게이지
-  function gauge(id,val,max,bands){
-    const s=document.getElementById(id),cx=80,cy=80,r=62;
-    const pt=(t,rr)=>[cx-rr*Math.cos(Math.PI*t),cy-rr*Math.sin(Math.PI*t)];
-    let h='';let prev=0;
-    bands.forEach(b=>{const [x1,y1]=pt(prev/max,r),[x2,y2]=pt(b[0]/max,r);h+='<path d="M'+x1+' '+y1+' A'+r+' '+r+' 0 0 1 '+x2+' '+y2+'" stroke="'+b[1]+'" stroke-width="9" fill="none" opacity=".85"/>';prev=b[0];});
-    for(let i=0;i<=20;i++){const [a1,b1]=pt(i/20,r-9),[a2,b2]=pt(i/20,r-(i%5?13:17));h+='<line x1="'+a1+'" y1="'+b1+'" x2="'+a2+'" y2="'+b2+'" stroke="#5f8a8f" stroke-width="1"/>';}
-    h+='<g class="needle" id="'+id+'n" style="transform:rotate(0deg)"><line x1="'+cx+'" y1="'+cy+'" x2="'+(cx-r+6)+'" y2="'+cy+'" stroke="#e9fffa" stroke-width="2"/></g><circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#e9fffa"/>';
-    s.innerHTML=h;
-    const deg=Math.min(val,max)/max*180,n=document.getElementById(id+'n');
-    if(reduce)n.style.transform='rotate('+deg+'deg)';else setTimeout(()=>n.style.transform='rotate('+deg+'deg)',400);
-  }
-  gauge('g1',25.64,50,[[15,'#46f0c8'],[25,'#ffb547'],[35,'#ff8a4c'],[50,'#ff5d6c']]);
-  gauge('g2',20,100,[[25,'#5aa9ff'],[45,'#7fb6d9'],[55,'#5f8a8f'],[75,'#ffb547'],[100,'#ff5d6c']]);
+  // 퀀트
+  const ddMax=15;
+  D.drawdown.forEach((r,i)=>{const pct=r.pct!=null?r.pct:(r.to/r.from-1)*100;
+    $('dd').insertAdjacentHTML('beforeend','<div class="dd-row"><span>'+esc(r.k)+'<small>'+esc(r.sub)+'</small></span><span class="ddtrack"><span class="ddbar"></span></span><span class="d-t" style="text-align:right">'+(r.est?'~':'')+(r.est?pct.toFixed(0):pct.toFixed(2))+'%'+'</span></div>');
+    grow($('dd').lastElementChild.querySelector('.ddbar'),'width',Math.min(Math.abs(pct),ddMax)/ddMax*100+'%',200+i*120);});
+  $('dd').insertAdjacentHTML('beforeend','<p class="note">막대 끝 = −15%. 출처: '+D.drawdown.map(r=>lnk(r.u,r.k)).join(' · ')+'</p>');
+  const rets=KS.filter(d=>d[2]!=null).map(d=>[d[0],d[2]]),mxr=Math.max(...rets.map(r=>Math.abs(r[1])));
+  rets.forEach((r,i)=>{const hgt=Math.abs(r[1])/mxr*46;
+    $('cols').insertAdjacentHTML('beforeend','<div class="col"><i class="'+(r[1]>0?'u':'d')+'"></i><b class="'+cls(r[1])+'" style="'+(r[1]>0?'bottom:calc(50% + '+hgt+'% + 2px)':'top:calc(50% + '+hgt+'% + 2px)')+'">'+(r[1]>0?'+':'')+r[1].toFixed(1)+'</b></div>');
+    grow($('cols').lastElementChild.querySelector('i'),'height',hgt+'%',300+i*90);
+    $('colx').insertAdjacentHTML('beforeend','<span>'+r[0].replace('/0','/')+'</span>');});
+  const v=rets.map(r=>r[1]),m=v.reduce((a,b)=>a+b,0)/v.length,sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/(v.length-1));
+  const absm=v.reduce((a,b)=>a+Math.abs(b),0)/v.length,bounce=(last[1]/Math.min(...known.map(d=>d[1]))-1)*100;
+  [[absm.toFixed(2)+'%','일간 등락 절댓값 평균 (n='+v.length+')'],[(sd*Math.sqrt(252)).toFixed(0)+'%','연율화 변동성 (표본)'],['+'+bounce.toFixed(2)+'%','수집구간 저점 대비 반등']].forEach(k=>$('kpis').insertAdjacentHTML('beforeend','<div class="kpi"><span class="kv">'+k[0]+'</span><span class="kl">'+k[1]+'</span></div>'));
 
-  // ── 스펙트럼
-  const spec=document.getElementById('spec');
-  ch.forEach((r,i)=>{
-    const w=Math.min(Math.abs(r.c),5)/5*50;
-    const el=document.createElement('div');el.className='row';
-    el.innerHTML='<span class="n">'+esc(r.k)+'<small>'+esc(r.d)+'</small></span><span class="track"><span class="b '+(r.c>0?'u':'d')+'"></span></span><span class="v '+cls(r.c)+'">'+fmt(r.c)+'</span>';
-    spec.appendChild(el);
-    const b=el.querySelector('.b');if(reduce)b.style.width=w+'%';else{b.style.transitionDelay=(i*70)+'ms';requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width=w+'%'));}
+  // 게이지
+  D.gauges.forEach((g,gi)=>{
+    const id='g'+gi;$('gauges').insertAdjacentHTML('beforeend','<div class="g"><svg id="'+id+'" viewBox="0 0 160 92" aria-hidden="true"></svg><span class="gv">'+g.v+'</span><span class="gk">'+esc(g.k)+tag(g.est)+'</span><span class="gs '+g.cls+'">'+esc(g.lab)+'</span><span class="gn">'+esc(g.d)+'<br>'+lnk(g.u,g.src)+'</span></div>');
+    const s=$(id),cx=80,cy=80,r=62,pt=(t,rr)=>[cx-rr*Math.cos(Math.PI*t),cy-rr*Math.sin(Math.PI*t)];let h='',p0=0;
+    g.bands.forEach(b=>{const [x1,y1]=pt(p0/g.max,r),[x2,y2]=pt(b[0]/g.max,r);h+='<path d="M'+x1+' '+y1+' A'+r+' '+r+' 0 0 1 '+x2+' '+y2+'" stroke="'+b[1]+'" stroke-width="10" fill="none" opacity=".85"/>';p0=b[0];});
+    for(let i=0;i<=20;i++){const [a1,b1]=pt(i/20,r-10),[a2,b2]=pt(i/20,r-(i%5?14:19));h+='<line x1="'+a1+'" y1="'+b1+'" x2="'+a2+'" y2="'+b2+'" stroke="#5f8a8f"/>';}
+    h+='<g class="needle" id="'+id+'n" style="transform:rotate(0deg)"><line x1="'+cx+'" y1="'+cy+'" x2="'+(cx-r+6)+'" y2="'+cy+'" stroke="#e9fffa" stroke-width="2.5"/></g><circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#e9fffa"/>';
+    s.innerHTML=h;const n=$(id+'n'),deg=Math.min(g.v,g.max)/g.max*180;
+    if(reduce)n.style.transform='rotate('+deg+'deg)';else setTimeout(()=>n.style.transform='rotate('+deg+'deg)',400+gi*200);
   });
+  $('gnote').textContent=D.gnote;
 
-  // ── 타일
-  const tiles=document.getElementById('tiles');
-  D.concat([{k:'VIX',p:'25.64',cs:'11/05 28.18',cc:0,d:'11/06 종가',src:'247wallst',u:'https://247wallst.com/investing/2026/11/06/wall-streets-fear-gauge-just-had-its-third-biggest-jump-since-1990/'}]).forEach(r=>{
-    const el=document.createElement('div');el.className='t'+(r.p?'':' miss');
-    const cc=r.cs?(r.cc<0?'d-t':r.cc>0?'u-t':'na'):cls(r.c);
-    el.innerHTML='<span class="k">'+esc(r.k)+(r.est?' <span class="tag">추정</span>':'')+'</span><span class="p">'+(r.p?esc(r.p):'미확보')+'</span><span class="c '+cc+'">'+(r.cs?esc(r.cs):fmt(r.c))+'</span><span class="s">'+esc(r.d)+' · '+lnk(r.u,r.src)+'</span>';
-    tiles.appendChild(el);
-  });
+  // 스펙트럼
+  ch.forEach((r,i)=>{const w=Math.min(Math.abs(r.c),5)/5*50,src=D.tiles.find(t=>t.k===r.k);
+    $('spec').insertAdjacentHTML('beforeend','<div class="row"><span class="n">'+esc(r.k)+'<small>'+esc(src?src.d:D.tech.d)+'</small></span><span class="track"><span class="b '+(r.c>0?'u':'d')+'"></span></span><span class="v '+cls(r.c)+'">'+fmt(r.c)+'</span></div>');
+    grow($('spec').lastElementChild.querySelector('.b'),'width',w+'%',i*60);});
 
-  // ── 수급
-  const fb=document.getElementById('flowbox'),mx=Math.max(...FL.flatMap(d=>[d.f,d.i,d.r].map(Math.abs)));
-  FL.forEach(d=>{
-    let h='<div class="fday"><span class="dt">'+d.d+(d.est?' <span class="tag">날짜 추정</span>':'')+'</span>';
-    [['외국인',d.f],['기관',d.i],['개인',d.r]].forEach(([k,v])=>{const w=Math.abs(v)/mx*50;
-      h+='<div class="frow"><span>'+k+'</span><span class="track"><span class="b '+(v>0?'u':'d')+'" data-w="'+w+'"></span></span><span class="v '+cls(v)+'">'+(v>0?'+':'')+v.toLocaleString()+'</span></div>';});
-    fb.insertAdjacentHTML('beforeend',h+'</div>');
-  });
-  fb.querySelectorAll('.b').forEach((b,i)=>{if(reduce)b.style.width=b.dataset.w+'%';else{b.style.transitionDelay=(300+i*60)+'ms';requestAnimationFrame(()=>requestAnimationFrame(()=>b.style.width=b.dataset.w+'%'));}});
-  fb.insertAdjacentHTML('beforeend','<p class="note">출처: '+lnk('https://www.blockmedia.co.kr/archives/1163075','블록미디어')+' · '+lnk('https://core.asiae.co.kr/article/2026110215450118253','아시아경제')+'</p>');
+  // 타일
+  D.tiles.forEach(r=>{const cc=r.cs?(r.cc<0?'d-t':r.cc>0?'u-t':'na'):cls(r.c);
+    $('tiles').insertAdjacentHTML('beforeend','<div class="t"><span class="k">'+esc(r.k)+tag(r.est)+'</span><span class="p">'+esc(r.p)+'</span><span class="c '+cc+'">'+(r.cs?esc(r.cs):fmt(r.c))+'</span><span class="s">'+esc(r.d)+' · '+lnk(r.u,r.src)+'</span></div>');});
 
-  // ── 열지도: 등락률 크기 → 색 농도 (±5% 포화)
-  const heat=document.getElementById('heat');
-  ST_.forEach(s=>{
-    const a=(.12+Math.min(Math.abs(s.c),5)/5*.6).toFixed(2),rgb=s.c>0?'255,93,108':'90,169,255';
-    heat.insertAdjacentHTML('beforeend','<div class="h" style="background:rgba('+rgb+','+a+');border-color:rgba('+rgb+',.6)"><span class="hn">'+esc(s.n)+(s.est?' <span class="tag">추정</span>':'')+'</span><span class="hc '+cls(s.c)+'" style="color:#e9fffa">'+fmt(s.c)+'</span><span class="hp">'+esc(s.p)+'</span><span class="hs">'+lnk(s.u,s.s)+'</span></div>');
-  });
+  // 기술주 열지도
+  $('techd').textContent=D.tech.d;
+  D.tech.items.forEach(s=>{const a=(.12+Math.min(Math.abs(s.c),7)/7*.6).toFixed(2),rgb=s.c>0?'255,93,108':'90,169,255';
+    $('heat').insertAdjacentHTML('beforeend','<div class="h" style="background:rgba('+rgb+','+a+');border-color:rgba('+rgb+',.6)"><span class="hn">'+esc(s.n)+tag(s.est)+'</span><span class="hc" style="color:#e9fffa">'+fmt(s.c)+'</span><span class="hp">'+esc(s.p)+'</span><span class="hs">'+lnk(s.u,s.s)+'</span></div>');});
+  $('technote').textContent=D.tech.note;
 
-  // ── 일정 D-day
-  const cal=document.getElementById('calbox'),now=kstNow();now.setHours(0,0,0,0);
-  EV.forEach(e=>{
-    const dt=new Date(e.d+'T00:00:00'),n=Math.round((dt-now)/864e5);
-    const lab=n>0?'D-'+n:n===0?'D-DAY':'D+'+(-n);
-    cal.insertAdjacentHTML('beforeend','<li><span class="dd'+(n<0?' past':'')+'">'+lab+'</span><div><div class="ce">'+esc(e.e)+(e.est?' <span class="tag">추정</span>':'')+'</div><div class="cd">'+e.d.slice(5).replace('-','/')+(e.x?' · '+esc(e.x):'')+' · '+lnk(e.u,e.s)+'</div></div></li>');
-  });
+  // 코인
+  D.coins.forEach(c=>$('coins').insertAdjacentHTML('beforeend','<div class="cn" data-sym="'+esc(c.k)+'"><span class="k">'+esc(c.k)+tag(c.est)+'</span><span class="p">'+esc(c.p)+'</span><span class="s">'+esc(c.d)+'<br>'+lnk(c.u,c.src)+'</span></div>'));
+  const em=Math.max(...D.etf.rows.map(r=>Math.abs(r[1])));
+  let eh='<div class="fday"><span class="dt">'+esc(D.etf.title)+'</span>';
+  D.etf.rows.forEach(r=>eh+='<div class="frow"><span>'+r[0]+'</span><span class="track"><span class="b '+(r[1]>0?'u':'d')+'" data-w="'+(Math.abs(r[1])/em*50)+'"></span></span><span class="v '+cls(r[1])+'">'+r[1].toFixed(1)+'</span></div>');
+  $('etf').innerHTML=eh+'</div><p class="note">출처: '+lnk(D.etf.u,D.etf.src)+'</p>';
+  $('coinnote').textContent=D.coinnote;
 
-  // ── 뉴스
-  const news=document.getElementById('news');
-  N.forEach(n=>news.insertAdjacentHTML('beforeend','<li><a href="'+esc(n.u)+'" target="_blank" rel="noopener"><span class="m"><span>'+esc(n.d)+'</span><span class="src">'+esc(n.s)+' ↗</span></span><h3>'+esc(n.t)+'</h3><p>'+esc(n.x)+'</p></a></li>'));
+  // 수급
+  $('alarm').innerHTML='<span class="x">'+esc(D.alarm.x)+'</span><p>'+esc(D.alarm.t)+' '+lnk(D.alarm.u,D.alarm.src)+'</p>';
+  const mx=Math.max(...D.flows.flatMap(d=>[d.f,d.i,d.r].map(Math.abs)));
+  D.flows.forEach(d=>{let h='<div class="fday"><span class="dt">'+d.d+(d.est?' <span class="tag">날짜 추정</span>':'')+'</span>';
+    [['외국인',d.f],['기관',d.i],['개인',d.r]].forEach(([k,v])=>h+='<div class="frow"><span>'+k+'</span><span class="track"><span class="b '+(v>0?'u':'d')+'" data-w="'+(Math.abs(v)/mx*50)+'"></span></span><span class="v '+cls(v)+'">'+(v>0?'+':'')+v.toLocaleString()+'</span></div>');
+    $('flowbox').insertAdjacentHTML('beforeend',h+'</div>');});
+  $('flowbox').insertAdjacentHTML('beforeend','<p class="note">출처: '+D.flowlinks.map(l=>lnk(l[1],l[0])).join(' · ')+'</p>');
+  $('flownote').textContent=D.flownote;
+  document.querySelectorAll('.flow .b').forEach((b,i)=>grow(b,'width',b.dataset.w+'%',300+i*60));
 
-  // ── 이동 탭 활성 표시
+  // 일정
+  const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Seoul'}));now.setHours(0,0,0,0);
+  D.events.forEach(e=>{const n=Math.round((new Date(e.d+'T00:00:00')-now)/864e5),lab=n>0?'D-'+n:n===0?'D-DAY':'D+'+(-n);
+    $('calbox').insertAdjacentHTML('beforeend','<li><span class="dd'+(n<0?' past':'')+'">'+lab+'</span><div><div class="ce">'+esc(e.e)+tag(e.est)+'</div><div class="cd">'+e.d.slice(5).replace('-','/')+(e.x?' · '+esc(e.x):'')+' · '+lnk(e.u,e.s)+'</div></div></li>');});
+
+  // 사건, 뉴스
+  D.chain.forEach(c=>$('chainbox').insertAdjacentHTML('beforeend','<li class="'+c.c+'"><span class="cdt">'+esc(c.d)+'</span><p>'+esc(c.t)+'</p><span class="src">'+lnk(c.u,c.s)+'</span></li>'));
+  D.news.forEach(n=>$('news').insertAdjacentHTML('beforeend','<li><a href="'+esc(n.u)+'" target="_blank" rel="noopener"><span class="m"><span>'+esc(n.d)+'</span><span class="src">'+esc(n.s)+' ↗</span></span><h3>'+esc(n.t)+'</h3><p>'+esc(n.x)+'</p></a></li>'));
+
+  // 이동 탭
   const tabs=[...document.querySelectorAll('#jump a')],secs=tabs.map(a=>document.querySelector(a.getAttribute('href')));
   addEventListener('scroll',()=>{let k=0;secs.forEach((s,i)=>{if(s.getBoundingClientRect().top<90)k=i;});tabs.forEach((t,i)=>t.classList.toggle('on',i===k&&scrollY>200));},{passive:true});
 
-  // ── 부팅 로그
-  const L=[['> 관제실 접속 중...',''],['> 시세 채널 수신 ............ ','12/12','ok'],['> 공포 계기 ................. ','경계','w'],['> 사건 로그 복호화 .......... ','5건','ok']];
-  const log=document.getElementById('log');
-  L.forEach((l,i)=>{const d=document.createElement('div');d.innerHTML=esc(l[0])+(l[1]?'<span class="'+l[2]+'">'+esc(l[1])+'</span>':'');if(!reduce){d.style.opacity=0;d.style.transition='opacity .2s';setTimeout(()=>d.style.opacity=1,150+i*280);}log.appendChild(d);});
+  // 부팅 로그
+  const L=[['> 관제실 접속 중...',''],['> 시세 채널 수신 ............ ',ch.length+'채널','ok'],['> 공포 계기 ................. ',D.gauges[1].lab,'w'],['> 사건 로그 복호화 .......... ',D.chain.length+'건','ok']];
+  L.forEach((l,i)=>{const d=document.createElement('div');d.innerHTML=esc(l[0])+(l[1]?'<span class="'+l[2]+'">'+esc(l[1])+'</span>':'');if(!reduce){d.style.opacity=0;d.style.transition='opacity .2s';setTimeout(()=>d.style.opacity=1,150+i*280);}$('log').appendChild(d);});
 })();
 </script>
